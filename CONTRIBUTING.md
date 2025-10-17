@@ -1,7 +1,7 @@
 # Начальная настройка (делается один раз)
 
 # 1. Клонируем репозиторий (если еще не клонировали)
-git clone https://github.com/your-team/performance-review-system.git
+git clone git@github.com:feniks1632/System-Performance-Review.git
 cd performance-review-system
 
 # 2. Настраиваем пользователя (если еще не настроено)
