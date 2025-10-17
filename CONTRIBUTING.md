@@ -2,7 +2,7 @@
 
 # 1. Клонируем репозиторий (если еще не клонировали)
 git clone git@github.com:feniks1632/System-Performance-Review.git
-cd performance-review-system
+cd System-Performance-Review
 
 # 2. Настраиваем пользователя (если еще не настроено)
 git config user.name "Ваше Имя"
