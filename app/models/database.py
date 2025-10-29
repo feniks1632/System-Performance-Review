@@ -58,6 +58,22 @@ class User(Base):
     manager = relationship("User", remote_side=[id], backref="subordinates")
 
 
+class GoalStep(Base):
+    """Подпункты/шаги для достижения цели"""
+    __tablename__ = "goal_steps"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    goal_id = Column(String, ForeignKey("goals.id"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    is_completed = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)  # для порядка следования
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    goal = relationship("Goal", back_populates="steps")
+
+
 class Goal(Base):
     __tablename__ = "goals"
 
@@ -76,6 +92,7 @@ class Goal(Base):
     respondents = relationship("User", secondary=goal_respondents)
     reviews = relationship("Review", back_populates="goal")
     respondent_reviews = relationship("RespondentReview", back_populates="goal")
+    steps = relationship("GoalStep", back_populates="goal", cascade="all, delete-orphan")  # Убрано дублирование
 
 
 class Review(Base):
@@ -102,7 +119,7 @@ class Review(Base):
     calculated_score = Column(Float)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # Исправлено
 
     # Relationships
     goal = relationship("Goal", back_populates="reviews")
@@ -125,22 +142,6 @@ class RespondentReview(Base):
     goal = relationship("Goal", back_populates="respondent_reviews")
     respondent = relationship("User", back_populates="respondent_reviews")
 
-
-class QuestionTemplate(Base):
-    __tablename__ = "question_templates"
-
-    id = Column(String, primary_key=True, default=generate_uuid)
-    question_type = Column(
-        String, nullable=False
-    )  # 'self', 'manager', 'potential', 'respondent'
-    question_text = Column(Text, nullable=False)
-    possible_answers = Column(Text)  # JSON с вариантами и баллами
-    weight = Column(Float, default=1.0)
-    trigger_words = Column(Text)  # JSON для рекомендаций
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-
 class Notification(Base):
     __tablename__ = "notifications"
 
@@ -158,3 +159,19 @@ class Notification(Base):
 
     # Relationships
     user = relationship("User", backref="notifications")
+    
+class QuestionTemplate(Base):
+    __tablename__ = "question_templates"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    question_text = Column(Text, nullable=False)
+    question_type = Column(String, nullable=False)  # 'self', 'manager', 'potential', 'respondent'
+    section = Column(String)  # Для потенциала: 'professional', 'personal', 'development'
+    weight = Column(Float, default=1.0)
+    max_score = Column(Integer, default=5)
+    order_index = Column(Integer, default=0)
+    trigger_words = Column(Text)  # JSON с триггерными словами для рекомендаций
+    options_json = Column(Text)  # JSON с вариантами ответов
+    requires_manager_scoring = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

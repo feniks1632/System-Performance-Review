@@ -4,10 +4,7 @@ import base64
 from unittest.mock import patch
 from datetime import datetime, timedelta
 from app.models.database import User, Goal
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.core.logger import logger
 
 
 class TestEmailContent:

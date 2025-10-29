@@ -2,14 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database.session import get_db
-from app.models.schemas import GoalCreate, GoalResponse
-from app.models.database import Goal as GoalModel, User
+from app.models.schemas import GoalCreate, GoalResponse, GoalStatus, SuccessResponse
+from app.models.database import Goal as GoalModel, GoalStep, User, Goal
 from app.api.endpoints.auth import get_current_user
 from app.services.email_service import EmailService
 from app.services.notification_service import NotificationService
-import logging
+from app.core.logger import logger
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["goals"])
 
@@ -22,6 +21,7 @@ router = APIRouter(tags=["goals"])
     Создание новой цели для сотрудника.
     
     - **Максимум 5 целей на сотрудника**
+    - **Максимум 3 подпункта на цель**
     - **respondent_ids**: список ID пользователей, которые будут оценивать прогресс
     - **Автоматически отправляет уведомления респондентам**
     """,
@@ -40,6 +40,18 @@ async def create_goal(
     if existing_goals >= 5:
         raise HTTPException(
             status_code=400, detail="Maximum 5 goals allowed per employee"
+        )
+
+    # Проверяем количество подпунктов (максимум 3)
+    if goal.steps and len(goal.steps) > 3:
+        raise HTTPException(
+            status_code=400, detail="Maximum 3 steps allowed per goal"
+        )
+        
+    if goal.respondent_ids and len(goal.respondent_ids) > 5:
+        raise HTTPException(
+            status_code=400, 
+            detail="Maximum 5 respondents allowed per goal"
         )
 
     # Создаем цель
@@ -61,7 +73,20 @@ async def create_goal(
     db.commit()
     db.refresh(db_goal)
 
-    # СОЗДАЕМ IN-APP УВЕДОМЛЕНИЯ
+    # Добавляем подпункты если есть
+    if goal.steps:
+        for i, step_data in enumerate(goal.steps):
+            step = GoalStep(
+                goal_id=db_goal.id,  # type: ignore
+                title=step_data.title,
+                description=step_data.description,
+                order_index=step_data.order_index or i
+            )
+            db.add(step)
+        db.commit()
+        db.refresh(db_goal)
+
+    # СОЗДАЕМ IN-APP УВЕДОМЛЕНИЯ (остальной код без изменений)
     if goal.respondent_ids:
         notification_service = NotificationService(db)
         notification_service.create_goal_created_notification(
@@ -80,19 +105,17 @@ async def create_goal(
         if respondent_emails:
             try:
                 email_service = EmailService(db)
-                success = email_service.notify_respondents_about_review_request(  # Сохраняем результат
+                success = email_service.notify_respondents_about_review_request(
                     goal_id=db_goal.id,  # type: ignore
                     employee_name=current_user.full_name,  # type: ignore
                     respondent_emails=respondent_emails,
                 )
                 if not success:
-                    # Логируем ошибку, но НЕ прерываем выполнение
                     logger.info("Failed to send some email notifications")
             except Exception as e:
-                # Ловим любые ошибки при отправке email, но НЕ падаем
                 logger.info(f"Email notification error: {e}")
+    
     return db_goal
-
 
 @router.get(
     "/employee/{employee_id}",
@@ -114,9 +137,10 @@ async def get_employee_goals(
 
     goals = db.query(GoalModel).filter(GoalModel.employee_id == employee_id).all()
 
-    # Добавляем имя сотрудника к ответу
+    # Добавляем имя сотрудника и подпункты к ответу
     for goal in goals:
         goal.employee_name = goal.employee.full_name  # type: ignore
+        # Подпункты автоматически загрузятся через relationship
 
     return goals
 
@@ -142,4 +166,42 @@ async def get_goal(
         raise HTTPException(status_code=403, detail="Not authorized to view this goal")
 
     goal.employee_name = goal.employee.full_name  # type: ignore
+    # Подпункты автоматически загрузятся через relationship
+    
     return goal
+
+@router.put(
+    "/{goal_id}/status",
+    response_model=SuccessResponse,
+    summary="Обновление статуса цели",
+    description="Обновление статуса цели (active, completed, cancelled).",
+)
+async def update_goal_status(
+    goal_id: str,
+    status_data: dict,  # Принимаем JSON объект
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Обновление статуса цели"""
+    goal = db.query(GoalModel).filter(GoalModel.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Проверка прав
+    if goal.employee_id != current_user.id and not current_user.is_manager:  # type: ignore
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Извлекаем статус из JSON объекта
+    new_status = status_data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=422, detail="Status field is required")
+    
+    # Проверяем что статус валидный
+    valid_statuses = ["active", "completed", "cancelled"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=422, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    goal.status = new_status  # type: ignore
+    db.commit()
+    
+    return SuccessResponse(message=f"Goal status updated to {new_status}")

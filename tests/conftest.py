@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -166,3 +167,148 @@ def user_service(db_session):
     from app.services.user_service import UserService
 
     return UserService(db_session)
+
+@pytest.fixture
+def test_question_templates(db_session):
+    """Создает тестовые шаблоны вопросов"""
+    from app.models.database import QuestionTemplate
+    
+    # Очищаем существующие вопросы
+    db_session.query(QuestionTemplate).delete()
+    
+    questions_data = [
+        # Самооценка
+        {
+            "question_text": "Опишите, каких результатов вы достигли по поставленной цели",
+            "question_type": "self", 
+            "section": "performance",
+            "weight": 1.5,
+            "max_score": 5,
+            "trigger_words": '["достижен", "результат", "успех", "выполнен"]'
+        },
+        {
+            "question_text": "Какие сложности возникли в процессе работы и как вы их преодолели?",
+            "question_type": "self",
+            "section": "problem_solving", 
+            "weight": 1.2,
+            "max_score": 5,
+            "trigger_words": '["сложн", "проблем", "трудн", "преодолел"]'
+        },
+        
+        # Оценка руководителя
+        {
+            "question_text": "Насколько сотрудник достиг запланированных результатов по цели?",
+            "question_type": "manager",
+            "section": "performance",
+            "weight": 2.0,
+            "max_score": 10,
+            "trigger_words": '["результат", "достижен", "план", "KPI"]'
+        },
+        {
+            "question_text": "Оцените качество взаимодействия сотрудника с коллегами",
+            "question_type": "manager", 
+            "section": "communication",
+            "weight": 1.5,
+            "max_score": 10,
+            "trigger_words": '["коммуникац", "общен", "команд", "взаимодейств"]'
+        },
+    ]
+    
+    questions = []
+    for i, q_data in enumerate(questions_data):
+        question = QuestionTemplate(
+            question_text=q_data["question_text"],
+            question_type=q_data["question_type"],
+            section=q_data["section"],
+            weight=q_data["weight"],
+            max_score=q_data["max_score"],
+            trigger_words=q_data["trigger_words"],
+            order_index=i
+        )
+        questions.append(question)
+    
+    db_session.add_all(questions)
+    db_session.commit()
+    
+    return questions
+
+@pytest.fixture
+def test_employee_user(db_session):
+    """Создает тестового сотрудника"""
+    from app.core.security import get_password_hash
+    from app.models.database import User
+
+    employee = User(
+        email="employee1@company.com",
+        full_name="Алексей Козлов (Сотрудник)",
+        hashed_password=get_password_hash("password123"), 
+        is_manager=False
+    )
+    db_session.add(employee)
+    db_session.commit()
+    db_session.refresh(employee)
+    return employee
+
+@pytest.fixture
+def test_manager_user_complete(db_session):
+    """Создает тестового руководителя с правильными данными"""
+    from app.core.security import get_password_hash
+    from app.models.database import User
+
+    manager = User(
+        email="manager1@company.com",
+        full_name="Иван Петров (Руководитель)",
+        hashed_password=get_password_hash("password123"),
+        is_manager=True
+    )
+    db_session.add(manager)
+    db_session.commit()
+    db_session.refresh(manager)
+    return manager
+
+@pytest.fixture
+def test_goal_with_employee(db_session, test_employee_user):
+    """Создает тестовую цель для сотрудника"""
+    from app.models.database import Goal
+    
+    future_date = datetime.now() + timedelta(days=90)
+    
+    goal = Goal(
+        title="Разработка нового функционала системы",
+        description="Реализация модуля аналитики и отчетности в Performance Review System",
+        expected_result="Запущенный в продакшен модуль с полным покрытием требований",
+        deadline=future_date,
+        task_link="https://jira.company.com/TASK-123",
+        employee_id=test_employee_user.id,
+        status="active"
+    )
+    
+    db_session.add(goal)
+    db_session.commit()
+    db_session.refresh(goal)
+    
+    return goal
+
+@pytest.fixture
+def employee_auth_headers(client, test_employee_user):
+    """Заголовки аутентификации для сотрудника"""
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "employee1@company.com", "password": "password123"},
+    )
+    assert login_response.status_code == 200, f"Ошибка логина сотрудника: {login_response.text}"
+    
+    token = login_response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture
+def manager_auth_headers(client, test_manager_user_complete):
+    """Заголовки аутентификации для руководителя"""
+    login_response = client.post(
+        "/api/v1/auth/login", 
+        json={"email": "manager1@company.com", "password": "password123"},
+    )
+    assert login_response.status_code == 200, f"Ошибка логина руководителя: {login_response.text}"
+    
+    token = login_response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

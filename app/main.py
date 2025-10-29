@@ -6,7 +6,11 @@ from app.models.database import Base
 import logging
 from contextlib import asynccontextmanager
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,  # Показывать всё, включая debug
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +58,7 @@ app = FastAPI(
 )
 
 # Подключаем роутеры
-from app.api.endpoints import auth, goals, reviews, analytics, notifications, users
+from app.api.endpoints import auth, goals, reviews, analytics, notifications, users, goal_steps, question_templates
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(goals.router, prefix="/api/v1/goals", tags=["goals"])
@@ -64,6 +68,8 @@ app.include_router(
     notifications.router, prefix="/api/v1/notifications", tags=["notifications"]
 )
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(goal_steps.router, prefix="/api/v1", tags=["goal-steps"])
+app.include_router(question_templates.router, prefix="/api/v1/question-templates", tags=["question-templates"])
 
 
 @app.get("/")

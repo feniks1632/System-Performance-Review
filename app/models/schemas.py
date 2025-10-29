@@ -78,43 +78,20 @@ class Token(BaseModel):
     token_type: str
     user: UserResponse
 
-
-# === СХЕМЫ ЦЕЛЕЙ ===
-class GoalBase(BaseModel):
-    """Базовая схема цели"""
-
-    title: str
-    description: str
-    expected_result: str
-    deadline: datetime
-    task_link: Optional[str] = None
-
-
-class GoalCreate(GoalBase):
-    """Создание цели"""
-
-    respondent_ids: Optional[List[str]] = []
-
-
-class GoalResponse(GoalBase):
-    """Ответ с данными цели"""
-
-    id: str
-    employee_id: str
-    status: str = "active"
-    created_at: datetime
-    employee_name: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# === СХЕМЫ ОЦЕНОК ===
+# === CХЕМЫ ОТВЕТОВ НА ВОПРОСЫ ===
 class Answer(BaseModel):
     """Ответ на вопрос в оценке"""
-
     question_id: str
-    answer: str
-    score: Optional[float] = None
+    answer: Optional[str] = None  # Текстовый ответ (для триггерных слов)
+    score: Optional[float] = None  # Числовой балл
+    selected_option: Optional[str] = None  # Для вопросов с вариантами ответов
+
+    @field_validator('score')
+    @classmethod
+    def validate_score(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Score must be positive')
+        return v
 
 
 class ReviewCreate(BaseModel):
@@ -152,19 +129,97 @@ class ReviewResponseWithAnswers(ReviewResponseBase):
 ReviewResponse = ReviewResponseBase
 
 
-class RespondentReviewCreate(BaseModel):
-    """Создание оценки респондента"""
-
-    goal_id: str
-    answers: List[Answer]
-    comments: Optional[str] = None
-
-
 class FinalReviewUpdate(BaseModel):
     """Завершение оценки руководителем"""
 
     final_rating: str
     final_feedback: str
+
+
+# === СХЕМЫ ОЦЕНОК РЕСПОНДЕНТОВ ===
+class RespondentReviewBase(BaseModel):
+    """Базовая схема оценки респондента"""
+    goal_id: str
+    answers: List[Answer]
+    comments: Optional[str] = None
+
+
+class RespondentReviewCreate(RespondentReviewBase):
+    """Создание оценки респондента"""
+    pass
+
+
+class RespondentReviewResponse(RespondentReviewBase):
+    """Ответ с данными оценки респондента"""
+    id: str
+    respondent_id: str
+    created_at: datetime
+    respondent_name: Optional[str] = None
+    answers: List[Answer]  # Явно указываем тип
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# === СХЕМЫ ПОДПУНКТОВ ЦЕЛЕЙ ===
+class GoalStepBase(BaseModel):
+    """Базовая схема подпункта цели"""
+    title: str
+    description: Optional[str] = None
+    order_index: int = 0
+
+
+class GoalStepCreate(GoalStepBase):
+    """Создание подпункта цели"""
+    pass
+
+
+class GoalStepUpdate(BaseModel):
+    """Обновление подпункта цели"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    is_completed: Optional[bool] = None
+    order_index: Optional[int] = None
+
+
+class GoalStepResponse(GoalStepBase):
+    """Ответ с данными подпункта цели"""
+    id: str
+    goal_id: str
+    is_completed: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# === СХЕМЫ ЦЕЛЕЙ ===
+class GoalBase(BaseModel):
+    """Базовая схема цели"""
+
+    title: str
+    description: str
+    expected_result: str
+    deadline: datetime
+    task_link: Optional[str] = None
+
+
+class GoalCreate(GoalBase):
+    """Создание цели"""
+
+    respondent_ids: Optional[List[str]] = []
+    steps: Optional[List[GoalStepCreate]] = []
+
+
+class GoalResponse(GoalBase):
+    """Ответ с данными цели"""
+
+    id: str
+    employee_id: str
+    status: str = "active"
+    created_at: datetime
+    employee_name: Optional[str] = None
+    steps: List[GoalStepResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === СХЕМЫ АНАЛИТИКИ ===
@@ -220,19 +275,25 @@ class UnreadCountResponse(BaseModel):
     """Количество непрочитанных уведомлений"""
 
     unread_count: int
-
-
-# === СХЕМЫ ШАБЛОНОВ ВОПРОСОВ ===
-class QuestionTemplateResponse(BaseModel):
-    """Шаблон вопроса"""
-
-    id: str
-    question_type: str
+    
+# === СХЕМЫ ВОПРОСОВ ===    
+class QuestionTemplateBase(BaseModel):
     question_text: str
-    possible_answers: Optional[Dict[str, Any]] = None
-    weight: float = 1.0
-    trigger_words: Optional[Dict[str, Any]] = None
-    is_active: bool = True
+    question_type: str
+    section: Optional[str] = None
+    weight: float 
+    max_score: int 
+    order_index: int 
+    trigger_words: Optional[str] = None
+    options_json: Optional[str] = None
+    requires_manager_scoring: bool = False
+
+class QuestionTemplateCreate(QuestionTemplateBase):
+    pass
+
+class QuestionTemplateResponse(QuestionTemplateBase):
+    id: str
+    is_active: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -256,3 +317,5 @@ class ValidationErrorResponse(BaseModel):
     """Ошибка валидации"""
 
     detail: List[Dict[str, Any]]
+    
+

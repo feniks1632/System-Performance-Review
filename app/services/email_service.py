@@ -5,9 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.database import User, Goal
-import logging
-
-logger = logging.getLogger(__name__)
+from app.core.logger import logger
 
 
 class EmailService:

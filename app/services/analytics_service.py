@@ -2,6 +2,11 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 import json
 
+from app.models.database import Review
+from app.models.schemas import Answer, ReviewType
+from app.services.review_service import ReviewService
+from app.core.logger import logger
+
 
 class AnalyticsService:
     def __init__(self, db: Session):
@@ -42,18 +47,19 @@ class AnalyticsService:
     def _calculate_scores(
         self, reviews: List, respondent_reviews: List
     ) -> Dict[str, float]:
-        """Расчет различных баллов"""
+        """Расчет различных баллов с новой логикой"""
         scores = {
             "self_score": 0,
             "manager_score": 0,
             "respondent_score": 0,
+            "potential_score": 0,
             "total_score": 0,
         }
 
         # Считаем самооценки
         self_scores = []
         for review in reviews:
-            if review.self_evaluation_answers and review.calculated_score:
+            if review.review_type == ReviewType.SELF and review.calculated_score:
                 self_scores.append(review.calculated_score)
 
         if self_scores:
@@ -62,7 +68,7 @@ class AnalyticsService:
         # Считаем оценки руководителя
         manager_scores = []
         for review in reviews:
-            if review.manager_evaluation_answers and review.calculated_score:
+            if review.review_type == ReviewType.MANAGER and review.calculated_score:
                 manager_scores.append(review.calculated_score)
 
         if manager_scores:
@@ -71,30 +77,50 @@ class AnalyticsService:
         # Считаем оценки респондентов
         respondent_scores = []
         for resp_review in respondent_reviews:
+            # Используем новую логику расчета из ответов
             if resp_review.answers:
-                answers = json.loads(resp_review.answers)
-                answer_scores = [a.get("score", 0) for a in answers if a.get("score")]
-                if answer_scores:
-                    respondent_scores.append(sum(answer_scores) / len(answer_scores))
+                try:
+                    answers_data = json.loads(resp_review.answers)
+                    answers = [Answer(**answer_data) for answer_data in answers_data]
+                    
+                    review_service = ReviewService(self.db)
+                    score = review_service.calculate_weighted_score(answers, ReviewType.RESPONDENT)
+                    respondent_scores.append(score)
+                except Exception as e:
+                    logger.error(f"Error calculating respondent score: {e}")
+                    continue
 
         if respondent_scores:
             scores["respondent_score"] = sum(respondent_scores) / len(respondent_scores)  # type: ignore
 
-        # Общий балл (взвешенное среднее)
+        # Считаем оценку потенциала
+        potential_scores = []
+        for review in reviews:
+            if review.review_type == ReviewType.POTENTIAL and review.calculated_score:
+                potential_scores.append(review.calculated_score)
+
+        if potential_scores:
+            scores["potential_score"] = sum(potential_scores) / len(potential_scores)  # type: ignore
+
+        # ОБНОВЛЕННЫЙ РАСЧЕТ ОБЩЕГО БАЛЛА
         total_scores = []
         weights = []
 
         if scores["self_score"] > 0:
             total_scores.append(scores["self_score"])
-            weights.append(1.0)
+            weights.append(1.0)  # Самооценка
 
         if scores["manager_score"] > 0:
             total_scores.append(scores["manager_score"])
-            weights.append(1.5)  # Оценка руководителя имеет больший вес
+            weights.append(1.8)  # Оценка руководителя - повышенный вес
 
         if scores["respondent_score"] > 0:
             total_scores.append(scores["respondent_score"])
-            weights.append(0.8)  # Оценки респондентов имеют меньший вес
+            weights.append(0.7)  # Оценки респондентов
+
+        if scores["potential_score"] > 0:
+            total_scores.append(scores["potential_score"])
+            weights.append(1.2)  # Оценка потенциала
 
         if total_scores:
             weighted_sum = sum(
@@ -108,7 +134,7 @@ class AnalyticsService:
         return scores  # type: ignore
 
     def _calculate_final_rating(self, score: float) -> str:
-        """Расчет итогового рейтинга"""
+        """Расчет итогового рейтинга на основе балла (шкала 0-5)"""
         if score >= 4.5:
             return "A"
         elif score >= 4.0:
@@ -210,3 +236,29 @@ class AnalyticsService:
             "overall_rating": self._calculate_final_rating(avg_score),
             "goals_analytics": goal_analytics,
         }
+
+    def _calculate_review_score(self, review: Review, review_service: ReviewService) -> float:
+        """Расчет балла с учетом вопросов, оцененных руководителем"""
+        answers = self._get_all_answers(review)
+        
+        # Проверяем, все ли вопросы оценены
+        if review_service.has_pending_manager_scores(review.id): # type: ignore
+            logger.warning(f"Review {review.id} has pending manager scores")
+            # Можно вернуть частичный балл или 0, в зависимости от бизнес-логики
+        
+        return review_service.calculate_weighted_score(answers, review.review_type) # type: ignore
+
+    def _get_all_answers(self, review: Review) -> List[Answer]:
+        """Получить все ответы из оценки"""
+        answers_data = []
+        
+        if review.review_type == ReviewType.SELF and review.self_evaluation_answers: # type: ignore
+            answers_data = json.loads(review.self_evaluation_answers) # type: ignore
+        elif review.review_type == ReviewType.MANAGER and review.manager_evaluation_answers: # type: ignore
+            answers_data = json.loads(review.manager_evaluation_answers) # type: ignore
+        elif review.review_type == ReviewType.POTENTIAL and review.potential_evaluation_answers: # type: ignore
+            answers_data = json.loads(review.potential_evaluation_answers) # type: ignore
+        elif review.review_type == ReviewType.RESPONDENT and hasattr(review, 'answers'): # type: ignore
+            answers_data = json.loads(review.answers) # type: ignore
+            
+        return [Answer(**data) for data in answers_data]

@@ -1,9 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.models.database import Notification, User
-import logging
-
-logger = logging.getLogger(__name__)
+from app.core.logger import logger
 
 
 class NotificationService:

@@ -109,27 +109,6 @@ async def get_my_subordinates(
     return subordinates
 
 
-@router.get(
-    "/profile",
-    response_model=UserResponse,
-    summary="Получение профиля текущего пользователя",
-    description="""
-    Получение полной информации о профиле текущего аутентифицированного пользователя.
-    
-    **Требования:**
-    - Любой аутентифицированный пользователь
-    - Валидный JWT токен
-    
-    **Возвращает:**
-    - Полную информацию о пользователе
-    - Включая email, полное имя, роль руководителя, ID руководителя (если назначен)
-    - Не включает хеш пароля
-    """,
-)
-async def get_current_user_profile(current_user: User = Depends(get_current_user)):
-    """Получить профиль текущего пользователя"""
-    return current_user
-
 
 @router.get(
     "/{user_id}",
