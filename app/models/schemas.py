@@ -78,19 +78,21 @@ class Token(BaseModel):
     token_type: str
     user: UserResponse
 
+
 # === CХЕМЫ ОТВЕТОВ НА ВОПРОСЫ ===
 class Answer(BaseModel):
     """Ответ на вопрос в оценке"""
+
     question_id: str
     answer: Optional[str] = None  # Текстовый ответ (для триггерных слов)
     score: Optional[float] = None  # Числовой балл
     selected_option: Optional[str] = None  # Для вопросов с вариантами ответов
 
-    @field_validator('score')
+    @field_validator("score")
     @classmethod
     def validate_score(cls, v):
         if v is not None and v < 0:
-            raise ValueError('Score must be positive')
+            raise ValueError("Score must be positive")
         return v
 
 
@@ -139,6 +141,7 @@ class FinalReviewUpdate(BaseModel):
 # === СХЕМЫ ОЦЕНОК РЕСПОНДЕНТОВ ===
 class RespondentReviewBase(BaseModel):
     """Базовая схема оценки респондента"""
+
     goal_id: str
     answers: List[Answer]
     comments: Optional[str] = None
@@ -146,11 +149,13 @@ class RespondentReviewBase(BaseModel):
 
 class RespondentReviewCreate(RespondentReviewBase):
     """Создание оценки респондента"""
+
     pass
 
 
 class RespondentReviewResponse(RespondentReviewBase):
     """Ответ с данными оценки респондента"""
+
     id: str
     respondent_id: str
     created_at: datetime
@@ -163,6 +168,7 @@ class RespondentReviewResponse(RespondentReviewBase):
 # === СХЕМЫ ПОДПУНКТОВ ЦЕЛЕЙ ===
 class GoalStepBase(BaseModel):
     """Базовая схема подпункта цели"""
+
     title: str
     description: Optional[str] = None
     order_index: int = 0
@@ -170,11 +176,13 @@ class GoalStepBase(BaseModel):
 
 class GoalStepCreate(GoalStepBase):
     """Создание подпункта цели"""
+
     pass
 
 
 class GoalStepUpdate(BaseModel):
     """Обновление подпункта цели"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     is_completed: Optional[bool] = None
@@ -183,6 +191,7 @@ class GoalStepUpdate(BaseModel):
 
 class GoalStepResponse(GoalStepBase):
     """Ответ с данными подпункта цели"""
+
     id: str
     goal_id: str
     is_completed: bool
@@ -218,6 +227,7 @@ class GoalResponse(GoalBase):
     created_at: datetime
     employee_name: Optional[str] = None
     steps: List[GoalStepResponse] = []
+    respondent_names: List[str] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -275,21 +285,24 @@ class UnreadCountResponse(BaseModel):
     """Количество непрочитанных уведомлений"""
 
     unread_count: int
-    
-# === СХЕМЫ ВОПРОСОВ ===    
+
+
+# === СХЕМЫ ВОПРОСОВ ===
 class QuestionTemplateBase(BaseModel):
     question_text: str
     question_type: str
     section: Optional[str] = None
-    weight: float 
-    max_score: int 
-    order_index: int 
+    weight: float
+    max_score: int
+    order_index: int
     trigger_words: Optional[str] = None
     options_json: Optional[str] = None
     requires_manager_scoring: bool = False
 
+
 class QuestionTemplateCreate(QuestionTemplateBase):
     pass
+
 
 class QuestionTemplateResponse(QuestionTemplateBase):
     id: str
@@ -317,5 +330,3 @@ class ValidationErrorResponse(BaseModel):
     """Ошибка валидации"""
 
     detail: List[Dict[str, Any]]
-    
-

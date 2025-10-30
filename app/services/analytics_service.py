@@ -82,9 +82,11 @@ class AnalyticsService:
                 try:
                     answers_data = json.loads(resp_review.answers)
                     answers = [Answer(**answer_data) for answer_data in answers_data]
-                    
+
                     review_service = ReviewService(self.db)
-                    score = review_service.calculate_weighted_score(answers, ReviewType.RESPONDENT)
+                    score = review_service.calculate_weighted_score(
+                        answers, ReviewType.RESPONDENT
+                    )
                     respondent_scores.append(score)
                 except Exception as e:
                     logger.error(f"Error calculating respondent score: {e}")
@@ -237,28 +239,30 @@ class AnalyticsService:
             "goals_analytics": goal_analytics,
         }
 
-    def _calculate_review_score(self, review: Review, review_service: ReviewService) -> float:
+    def _calculate_review_score(
+        self, review: Review, review_service: ReviewService
+    ) -> float:
         """Расчет балла с учетом вопросов, оцененных руководителем"""
         answers = self._get_all_answers(review)
-        
+
         # Проверяем, все ли вопросы оценены
-        if review_service.has_pending_manager_scores(review.id): # type: ignore
+        if review_service.has_pending_manager_scores(review.id):  # type: ignore
             logger.warning(f"Review {review.id} has pending manager scores")
             # Можно вернуть частичный балл или 0, в зависимости от бизнес-логики
-        
-        return review_service.calculate_weighted_score(answers, review.review_type) # type: ignore
+
+        return review_service.calculate_weighted_score(answers, review.review_type)  # type: ignore
 
     def _get_all_answers(self, review: Review) -> List[Answer]:
         """Получить все ответы из оценки"""
         answers_data = []
-        
-        if review.review_type == ReviewType.SELF and review.self_evaluation_answers: # type: ignore
-            answers_data = json.loads(review.self_evaluation_answers) # type: ignore
-        elif review.review_type == ReviewType.MANAGER and review.manager_evaluation_answers: # type: ignore
-            answers_data = json.loads(review.manager_evaluation_answers) # type: ignore
-        elif review.review_type == ReviewType.POTENTIAL and review.potential_evaluation_answers: # type: ignore
-            answers_data = json.loads(review.potential_evaluation_answers) # type: ignore
-        elif review.review_type == ReviewType.RESPONDENT and hasattr(review, 'answers'): # type: ignore
-            answers_data = json.loads(review.answers) # type: ignore
-            
+
+        if review.review_type == ReviewType.SELF and review.self_evaluation_answers:  # type: ignore
+            answers_data = json.loads(review.self_evaluation_answers)  # type: ignore
+        elif review.review_type == ReviewType.MANAGER and review.manager_evaluation_answers:  # type: ignore
+            answers_data = json.loads(review.manager_evaluation_answers)  # type: ignore
+        elif review.review_type == ReviewType.POTENTIAL and review.potential_evaluation_answers:  # type: ignore
+            answers_data = json.loads(review.potential_evaluation_answers)  # type: ignore
+        elif review.review_type == ReviewType.RESPONDENT and hasattr(review, "answers"):  # type: ignore
+            answers_data = json.loads(review.answers)  # type: ignore
+
         return [Answer(**data) for data in answers_data]

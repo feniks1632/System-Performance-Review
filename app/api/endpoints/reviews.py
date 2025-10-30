@@ -13,7 +13,7 @@ from app.models.schemas import (
     FinalReviewUpdate,
     ReviewType,
     RespondentReviewResponse,
-    SuccessResponse
+    SuccessResponse,
 )
 from app.models.database import Review, RespondentReview, Goal, User
 from app.api.endpoints.auth import get_current_user
@@ -24,8 +24,6 @@ from app.services.user_service import UserService
 from app.core.logger import logger
 
 router = APIRouter(tags=["reviews"])
-
-
 
 
 @router.post(
@@ -86,17 +84,19 @@ async def create_review(
 
     # РАСЧЕТ БАЛЛОВ С НОВОЙ ЛОГИКОЙ
     review_service = ReviewService(db)
-    
+
     if review.review_type == ReviewType.POTENTIAL:
         # Для оценки потенциала используем специальный расчет
         potential_scores = review_service.calculate_potential_score(review.answers)
         score = potential_scores["total_potential_score"]
-        
+
         # Сохраняем детальные баллы потенциала в JSON
         potential_details = json.dumps(potential_scores)
     else:
         # Для других типов используем стандартный расчет
-        score = review_service.calculate_weighted_score(review.answers, review.review_type)
+        score = review_service.calculate_weighted_score(
+            review.answers, review.review_type
+        )
         potential_details = None
 
     # ГЕНЕРАЦИЯ РЕКОМЕНДАЦИЙ НА ОСНОВЕ ТРИГГЕРНЫХ СЛОВ
@@ -108,7 +108,9 @@ async def create_review(
         reviewer_id=current_user.id,
         review_type=review.review_type,
         calculated_score=score,
-        final_feedback=json.dumps(recommendations) if recommendations else None,  # Сохраняем рекомендации
+        final_feedback=(
+            json.dumps(recommendations) if recommendations else None
+        ),  # Сохраняем рекомендации
     )
 
     # Сохраняем ответы в соответствующие поля
@@ -153,7 +155,7 @@ async def create_review(
                 employee_name=current_user.full_name,  # type: ignore
                 manager_id=manager.id,  # type: ignore
             )
-    
+
     return ReviewResponse(
         id=db_review.id,  # type: ignore
         goal_id=db_review.goal_id,  # type: ignore
@@ -304,8 +306,7 @@ async def create_respondent_review(
     # Проверяем что пользователь является респондентом цели
     if current_user not in goal.respondents:  # type: ignore
         raise HTTPException(
-            status_code=403, 
-            detail="Not authorized as respondent for this goal"
+            status_code=403, detail="Not authorized as respondent for this goal"
         )
 
     # Проверяем, не существует ли уже оценка от этого респондента
@@ -313,20 +314,21 @@ async def create_respondent_review(
         db.query(RespondentReview)
         .filter(
             RespondentReview.goal_id == review.goal_id,
-            RespondentReview.respondent_id == current_user.id
+            RespondentReview.respondent_id == current_user.id,
         )
         .first()
     )
 
     if existing_review:
         raise HTTPException(
-            status_code=400, 
-            detail="Respondent review already exists for this goal"
+            status_code=400, detail="Respondent review already exists for this goal"
         )
 
     # РАСЧЕТ БАЛЛОВ С НОВОЙ ЛОГИКОЙ
     review_service = ReviewService(db)
-    score = review_service.calculate_weighted_score(review.answers, ReviewType.RESPONDENT)
+    score = review_service.calculate_weighted_score(
+        review.answers, ReviewType.RESPONDENT
+    )
 
     # ГЕНЕРАЦИЯ РЕКОМЕНДАЦИЙ
     recommendations = review_service.extract_trigger_words_feedback(review.answers)
@@ -345,7 +347,7 @@ async def create_respondent_review(
         goal_id=review.goal_id,
         respondent_id=current_user.id,
         answers=json.dumps([answer.model_dump() for answer in review.answers]),
-        comments=enhanced_comments  # type: ignore
+        comments=enhanced_comments,  # type: ignore
     )
 
     db.add(db_review)
@@ -362,7 +364,7 @@ async def create_respondent_review(
         answers=review.answers,
         comments=db_review.comments,  # type: ignore
         created_at=db_review.created_at,  # type: ignore
-        respondent_name=current_user.full_name  # type: ignore
+        respondent_name=current_user.full_name,  # type: ignore
     )
 
 
@@ -384,12 +386,13 @@ async def get_respondent_review(
 
     # Проверяем права доступа
     goal = review.goal
-    if (goal.employee_id != current_user.id and 
-        not current_user.is_manager and  # type: ignore
-        review.respondent_id != current_user.id):  # type: ignore
+    if (
+        goal.employee_id != current_user.id
+        and not current_user.is_manager  # type: ignore
+        and review.respondent_id != current_user.id
+    ):  # type: ignore
         raise HTTPException(
-            status_code=403, 
-            detail="Not authorized to view this respondent review"
+            status_code=403, detail="Not authorized to view this respondent review"
         )
 
     # Парсим JSON ответы и преобразуем в List[Answer]
@@ -409,13 +412,14 @@ async def get_respondent_review(
         answers=parsed_answers,  # Теперь это List[Answer]
         comments=review.comments,  # type: ignore
         created_at=review.created_at,  # type: ignore
-        respondent_name=review.respondent.full_name  # type: ignore
+        respondent_name=review.respondent.full_name,  # type: ignore
     )
-    
+
+
 @router.post(
     "/{review_id}/score-manager-questions",
     response_model=SuccessResponse,
-    summary="Оценка вопросов руководителем"
+    summary="Оценка вопросов руководителем",
 )
 async def score_manager_questions(
     review_id: str,
@@ -424,55 +428,58 @@ async def score_manager_questions(
     db: Session = Depends(get_db),
 ):
     """Руководитель оценивает вопросы по 10-балльной системе"""
-    if not current_user.is_manager: # type: ignore
+    if not current_user.is_manager:  # type: ignore
         raise HTTPException(status_code=403, detail="Only managers can score questions")
 
     review_service = ReviewService(db)
     review = db.query(Review).filter(Review.id == review_id).first()
-    
+
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
     # Валидация оценок (1-10)
     for score_data in scores:
-        if score_data.score is not None and (score_data.score < 1 or score_data.score > 10):
+        if score_data.score is not None and (
+            score_data.score < 1 or score_data.score > 10
+        ):
             raise HTTPException(
-                status_code=400, 
-                detail=f"Score must be between 1 and 10 for question {score_data.question_id}"
+                status_code=400,
+                detail=f"Score must be between 1 and 10 for question {score_data.question_id}",
             )
 
     # Обновляем оценки в соответствующих полях
-    if review.review_type == ReviewType.SELF and review.self_evaluation_answers: # type: ignore
-        answers_data = json.loads(review.self_evaluation_answers) # type: ignore
+    if review.review_type == ReviewType.SELF and review.self_evaluation_answers:  # type: ignore
+        answers_data = json.loads(review.self_evaluation_answers)  # type: ignore
         for score_data in scores:
             for answer in answers_data:
                 if answer.get("question_id") == score_data.question_id:
                     answer["score"] = score_data.score
-        review.self_evaluation_answers = json.dumps(answers_data) # type: ignore
-    
-    elif review.review_type == ReviewType.RESPONDENT and hasattr(review, 'answers'): # type: ignore
-        answers_data = json.loads(review.answers) # type: ignore
+        review.self_evaluation_answers = json.dumps(answers_data)  # type: ignore
+
+    elif review.review_type == ReviewType.RESPONDENT and hasattr(review, "answers"):  # type: ignore
+        answers_data = json.loads(review.answers)  # type: ignore
         for score_data in scores:
             for answer in answers_data:
-                if answer.get("question_id") == score_data.question_id: 
-                    answer["score"] = score_data.score # type: ignore
-        review.answers = json.dumps(answers_data) # type: ignore
+                if answer.get("question_id") == score_data.question_id:
+                    answer["score"] = score_data.score  # type: ignore
+        review.answers = json.dumps(answers_data)  # type: ignore
 
     # Пересчитываем общий балл
-    updated_answers = [Answer(**data) for data in answers_data] # type: ignore
-    total_score = review_service.calculate_weighted_score(updated_answers, review.review_type) # type: ignore
-    review.calculated_score = total_score # type: ignore
-    
+    updated_answers = [Answer(**data) for data in answers_data]  # type: ignore
+    total_score = review_service.calculate_weighted_score(updated_answers, review.review_type)  # type: ignore
+    review.calculated_score = total_score  # type: ignore
+
     db.commit()
 
     return SuccessResponse(
         message=f"Questions scored successfully. New total score: {total_score:.2f}"
     )
 
+
 @router.get(
     "/{review_id}/pending-manager-scores",
     response_model=List[Dict],
-    summary="Получить вопросы, ожидающие оценку руководителя"
+    summary="Получить вопросы, ожидающие оценку руководителя",
 )
 async def get_pending_manager_scores(
     review_id: str,

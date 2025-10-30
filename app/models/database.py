@@ -60,6 +60,7 @@ class User(Base):
 
 class GoalStep(Base):
     """Подпункты/шаги для достижения цели"""
+
     __tablename__ = "goal_steps"
 
     id = Column(String, primary_key=True, default=generate_uuid)
@@ -92,7 +93,9 @@ class Goal(Base):
     respondents = relationship("User", secondary=goal_respondents)
     reviews = relationship("Review", back_populates="goal")
     respondent_reviews = relationship("RespondentReview", back_populates="goal")
-    steps = relationship("GoalStep", back_populates="goal", cascade="all, delete-orphan")  # Убрано дублирование
+    steps = relationship(
+        "GoalStep", back_populates="goal", cascade="all, delete-orphan"
+    )
 
 
 class Review(Base):
@@ -119,7 +122,11 @@ class Review(Base):
     calculated_score = Column(Float)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # Исправлено
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )  # Исправлено
 
     # Relationships
     goal = relationship("Goal", back_populates="reviews")
@@ -142,6 +149,7 @@ class RespondentReview(Base):
     goal = relationship("Goal", back_populates="respondent_reviews")
     respondent = relationship("User", back_populates="respondent_reviews")
 
+
 class Notification(Base):
     __tablename__ = "notifications"
 
@@ -159,14 +167,19 @@ class Notification(Base):
 
     # Relationships
     user = relationship("User", backref="notifications")
-    
+
+
 class QuestionTemplate(Base):
     __tablename__ = "question_templates"
-    
+
     id = Column(String, primary_key=True, default=generate_uuid)
     question_text = Column(Text, nullable=False)
-    question_type = Column(String, nullable=False)  # 'self', 'manager', 'potential', 'respondent'
-    section = Column(String)  # Для потенциала: 'professional', 'personal', 'development'
+    question_type = Column(
+        String, nullable=False
+    )  # 'self', 'manager', 'potential', 'respondent'
+    section = Column(
+        String
+    )  # Для потенциала: 'professional', 'personal', 'development'
     weight = Column(Float, default=1.0)
     max_score = Column(Integer, default=5)
     order_index = Column(Integer, default=0)

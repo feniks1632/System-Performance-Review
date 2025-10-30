@@ -109,7 +109,6 @@ async def get_my_subordinates(
     return subordinates
 
 
-
 @router.get(
     "/{user_id}",
     response_model=UserResponse,

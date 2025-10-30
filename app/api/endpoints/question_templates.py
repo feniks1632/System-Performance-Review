@@ -5,9 +5,9 @@ from app.database.session import get_db
 from app.models.database import QuestionTemplate, User
 from app.api.endpoints.auth import get_current_user
 from app.models.schemas import (
-    QuestionTemplateCreate, 
+    QuestionTemplateCreate,
     QuestionTemplateResponse,
-    SuccessResponse
+    SuccessResponse,
 )
 
 router = APIRouter(tags=["question-templates"])
@@ -27,8 +27,7 @@ async def create_question_template(
     """Создание шаблона вопроса"""
     if not current_user.is_manager:  # type: ignore
         raise HTTPException(
-            status_code=403, 
-            detail="Only managers can create question templates"
+            status_code=403, detail="Only managers can create question templates"
         )
 
     # Создаем шаблон
@@ -67,7 +66,7 @@ async def get_question_templates(
 
     if question_type:
         query = query.filter(QuestionTemplate.question_type == question_type)
-    
+
     if section:
         query = query.filter(QuestionTemplate.section == section)
 
@@ -87,7 +86,9 @@ async def get_question_template(
     db: Session = Depends(get_db),
 ):
     """Получение шаблона вопроса по ID"""
-    template = db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    template = (
+        db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    )
     if not template:
         raise HTTPException(status_code=404, detail="Question template not found")
 
@@ -109,11 +110,12 @@ async def update_question_template(
     """Обновление шаблона вопроса"""
     if not current_user.is_manager:  # type: ignore
         raise HTTPException(
-            status_code=403, 
-            detail="Only managers can update question templates"
+            status_code=403, detail="Only managers can update question templates"
         )
 
-    template = db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    template = (
+        db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    )
     if not template:
         raise HTTPException(status_code=404, detail="Question template not found")
 
@@ -125,7 +127,7 @@ async def update_question_template(
     template.max_score = template_data.max_score  # type: ignore
     template.order_index = template_data.order_index  # type: ignore
     template.trigger_words = template_data.trigger_words  # type: ignore
-    template.requires_manager_scoring = template_data.requires_manager_scoring # type: ignore
+    template.requires_manager_scoring = template_data.requires_manager_scoring  # type: ignore
 
     db.commit()
     db.refresh(template)
@@ -147,11 +149,12 @@ async def delete_question_template(
     """Удаление шаблона вопроса"""
     if not current_user.is_manager:  # type: ignore
         raise HTTPException(
-            status_code=403, 
-            detail="Only managers can delete question templates"
+            status_code=403, detail="Only managers can delete question templates"
         )
 
-    template = db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    template = (
+        db.query(QuestionTemplate).filter(QuestionTemplate.id == template_id).first()
+    )
     if not template:
         raise HTTPException(status_code=404, detail="Question template not found")
 
@@ -159,4 +162,3 @@ async def delete_question_template(
     db.commit()
 
     return SuccessResponse(message="Question template deleted successfully")
-

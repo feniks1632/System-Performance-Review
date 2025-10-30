@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core.logger import logger
 
 
 def debug_register():
@@ -12,21 +13,21 @@ def debug_register():
         "is_manager": False,
     }
 
-    print("Testing registration with data:")
-    print(test_data)
+    logger.info("Testing registration with data:")
+    logger.info(test_data)
 
     response = client.post("/api/v1/auth/register", json=test_data)
 
-    print(f"Status Code: {response.status_code}")
-    print(f"Response: {response.text}")
+    logger.info(f"Status Code: {response.status_code}")
+    logger.info(f"Response: {response.text}")
 
     if response.status_code == 400:
-        print("❌ Registration failed with 400")
+        logger.info("Registration failed with 400")
         try:
             error_detail = response.json()
-            print(f"Error details: {error_detail}")
+            logger.info(f"Error details: {error_detail}")
         except:
-            print("Could not parse error response")
+            logger.info("Could not parse error response")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from app.models.schemas import (
     GoalStepResponse,
     GoalStepCreate,
     GoalStepUpdate,
-    SuccessResponse
+    SuccessResponse,
 )
 
 router = APIRouter(tags=["goal-steps"])
@@ -39,18 +39,18 @@ async def create_goal_step(
         )
 
     # Проверяем лимит подпунктов (максимум 3)
-    existing_steps_count = db.query(GoalStep).filter(GoalStep.goal_id == goal_id).count()
+    existing_steps_count = (
+        db.query(GoalStep).filter(GoalStep.goal_id == goal_id).count()
+    )
     if existing_steps_count >= 3:
-        raise HTTPException(
-            status_code=400, detail="Maximum 3 steps allowed per goal"
-        )
+        raise HTTPException(status_code=400, detail="Maximum 3 steps allowed per goal")
 
     # Создаем подпункт
     step = GoalStep(
         goal_id=goal_id,
         title=step_data.title,
         description=step_data.description,
-        order_index=step_data.order_index or existing_steps_count
+        order_index=step_data.order_index or existing_steps_count,
     )
 
     db.add(step)
@@ -76,14 +76,23 @@ async def get_goal_steps(
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-
-    # Проверяем права доступа
-    if goal.employee_id != current_user.id and not current_user.is_manager:  # type: ignore
+    
+    # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА - ПРОВЕРКА НА РЕСПОНДЕНТА
+    is_owner = goal.employee_id == current_user.id
+    is_manager = current_user.is_manager
+    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
+    
+    if not (is_owner or is_manager or is_respondent): # type: ignore
         raise HTTPException(
             status_code=403, detail="Not authorized to view these goal steps"
         )
 
-    steps = db.query(GoalStep).filter(GoalStep.goal_id == goal_id).order_by(GoalStep.order_index).all()
+    steps = (
+        db.query(GoalStep)
+        .filter(GoalStep.goal_id == goal_id)
+        .order_by(GoalStep.order_index)
+        .all()
+    )
     return steps
 
 
@@ -114,13 +123,13 @@ async def update_goal_step(
     # Обновляем поля
     if step_data.title is not None:
         step.title = step_data.title  # type: ignore
-    
+
     if step_data.description is not None:
         step.description = step_data.description  # type: ignore
-    
+
     if step_data.is_completed is not None:
         step.is_completed = step_data.is_completed  # type: ignore
-    
+
     if step_data.order_index is not None:
         step.order_index = step_data.order_index  # type: ignore
 
@@ -190,7 +199,7 @@ async def complete_goal_step(
 
 
 @router.put(
-    "/steps/{step_id}/incomplete", 
+    "/steps/{step_id}/incomplete",
     response_model=GoalStepResponse,
     summary="Отметить подпункт как невыполненный",
     description="Отметка подпункта как невыполненного.",
@@ -217,3 +226,36 @@ async def incomplete_goal_step(
     db.refresh(step)
 
     return step
+
+@router.get(
+    "/respondent/{goal_id}/steps",
+    response_model=List[GoalStepResponse],
+    summary="Получение подпунктов цели для респондента",
+    description="Получение всех подпунктов/шагов для конкретной цели, если пользователь является респондентом.",
+)
+async def get_goal_steps_as_respondent(
+    goal_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Получение подпунктов цели респондентом"""
+    # Проверяем существование цели
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+
+    # Проверяем, является ли пользователь респондентом
+    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
+    if not is_respondent:
+        raise HTTPException(
+            status_code=403, 
+            detail="Not authorized as respondent for this goal"
+        )
+
+    steps = (
+        db.query(GoalStep)
+        .filter(GoalStep.goal_id == goal_id)
+        .order_by(GoalStep.order_index)
+        .all()
+    )
+    return steps
