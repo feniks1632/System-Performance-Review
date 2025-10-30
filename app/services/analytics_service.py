@@ -1,11 +1,11 @@
+import json
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
-import json
 
-from app.models.database import Review
+from app.core.logger import logger
+from app.models.database import Review, RespondentReview, Goal
 from app.models.schemas import Answer, ReviewType
 from app.services.review_service import ReviewService
-from app.core.logger import logger
 
 
 class AnalyticsService:
@@ -14,7 +14,6 @@ class AnalyticsService:
 
     def get_goal_analytics(self, goal_id: str) -> Dict[str, Any]:
         """Комплексная аналитика по цели"""
-        from app.models.database import Goal, Review, RespondentReview
 
         goal = self.db.query(Goal).filter(Goal.id == goal_id).first()
         if not goal:
@@ -47,7 +46,7 @@ class AnalyticsService:
     def _calculate_scores(
         self, reviews: List, respondent_reviews: List
     ) -> Dict[str, float]:
-        """Расчет различных баллов с новой логикой"""
+        """Расчет различных баллов"""
         scores = {
             "self_score": 0,
             "manager_score": 0,
@@ -77,7 +76,7 @@ class AnalyticsService:
         # Считаем оценки респондентов
         respondent_scores = []
         for resp_review in respondent_reviews:
-            # Используем новую логику расчета из ответов
+            # Используем логику расчета из ответов
             if resp_review.answers:
                 try:
                     answers_data = json.loads(resp_review.answers)
@@ -104,7 +103,7 @@ class AnalyticsService:
         if potential_scores:
             scores["potential_score"] = sum(potential_scores) / len(potential_scores)  # type: ignore
 
-        # ОБНОВЛЕННЫЙ РАСЧЕТ ОБЩЕГО БАЛЛА
+        # РАСЧЕТ ОБЩЕГО БАЛЛА
         total_scores = []
         weights = []
 
@@ -248,7 +247,6 @@ class AnalyticsService:
         # Проверяем, все ли вопросы оценены
         if review_service.has_pending_manager_scores(review.id):  # type: ignore
             logger.warning(f"Review {review.id} has pending manager scores")
-            # Можно вернуть частичный балл или 0, в зависимости от бизнес-логики
 
         return review_service.calculate_weighted_score(answers, review.review_type)  # type: ignore
 

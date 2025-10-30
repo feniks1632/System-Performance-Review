@@ -1,7 +1,7 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
-from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from typing import Optional, List, Dict, Any
 
 
 class ReviewType(str, Enum):
@@ -43,7 +43,7 @@ class UserCreate(UserBase):
     """Создание пользователя"""
 
     password: str
-    manager_id: Optional[str] = None  # ДОБАВЛЯЕМ ВЫБОР РУКОВОДИТЕЛЯ
+    manager_id: Optional[str] = None  # ВЫБОР РУКОВОДИТЕЛЯ
 
     @field_validator("password")
     @classmethod
@@ -252,6 +252,7 @@ class GoalAnalyticsResponse(BaseModel):
     recommendations: List[str]
     review_count: int
     respondent_count: int
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EmployeeSummaryResponse(BaseModel):
@@ -263,6 +264,7 @@ class EmployeeSummaryResponse(BaseModel):
     average_score: float
     overall_rating: str
     goals_analytics: List[GoalAnalyticsResponse]
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === СХЕМЫ УВЕДОМЛЕНИЙ ===
@@ -298,6 +300,7 @@ class QuestionTemplateBase(BaseModel):
     trigger_words: Optional[str] = None
     options_json: Optional[str] = None
     requires_manager_scoring: bool = False
+    model_config = ConfigDict(from_attributes=True)
 
 
 class QuestionTemplateCreate(QuestionTemplateBase):

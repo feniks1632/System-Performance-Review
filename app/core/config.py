@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict, Field
-from typing import Optional
 from dotenv import load_dotenv
+from pydantic import ConfigDict, Field
+from pydantic_settings import BaseSettings
+
+from app.core.logger import logger
 
 load_dotenv()
 
@@ -66,6 +67,6 @@ settings = Settings()
 # Автоматическая валидация при импорте
 try:
     settings.validate_settings()
-    print("Конфигурация загружена успешно!")
+    logger.info("Конфигурация загружена успешно!")
 except ValueError as e:
-    print(f"Внимание: {e}")
+    logger.info(f"Внимание: {e}")

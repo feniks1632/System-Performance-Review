@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+
 from app.database.session import get_db
 from app.models.database import Goal, GoalStep, User
 from app.api.endpoints.auth import get_current_user
@@ -10,6 +11,7 @@ from app.models.schemas import (
     GoalStepUpdate,
     SuccessResponse,
 )
+
 
 router = APIRouter(tags=["goal-steps"])
 
@@ -76,13 +78,15 @@ async def get_goal_steps(
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-    
+
     # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА - ПРОВЕРКА НА РЕСПОНДЕНТА
     is_owner = goal.employee_id == current_user.id
     is_manager = current_user.is_manager
-    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
-    
-    if not (is_owner or is_manager or is_respondent): # type: ignore
+    is_respondent = any(
+        respondent.id == current_user.id for respondent in goal.respondents
+    )
+
+    if not (is_owner or is_manager or is_respondent):  # type: ignore
         raise HTTPException(
             status_code=403, detail="Not authorized to view these goal steps"
         )
@@ -227,6 +231,7 @@ async def incomplete_goal_step(
 
     return step
 
+
 @router.get(
     "/respondent/{goal_id}/steps",
     response_model=List[GoalStepResponse],
@@ -245,11 +250,12 @@ async def get_goal_steps_as_respondent(
         raise HTTPException(status_code=404, detail="Goal not found")
 
     # Проверяем, является ли пользователь респондентом
-    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
+    is_respondent = any(
+        respondent.id == current_user.id for respondent in goal.respondents
+    )
     if not is_respondent:
         raise HTTPException(
-            status_code=403, 
-            detail="Not authorized as respondent for this goal"
+            status_code=403, detail="Not authorized as respondent for this goal"
         )
 
     steps = (

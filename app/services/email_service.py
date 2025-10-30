@@ -1,11 +1,11 @@
-# app/services/email_service.py
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from sqlalchemy.orm import Session
+
 from app.core.config import settings
-from app.models.database import User, Goal
 from app.core.logger import logger
+from app.models.database import Goal
 
 
 class EmailService:

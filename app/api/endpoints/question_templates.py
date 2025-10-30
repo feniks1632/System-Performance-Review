@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+
+from app.api.endpoints.auth import get_current_user
 from app.database.session import get_db
 from app.models.database import QuestionTemplate, User
-from app.api.endpoints.auth import get_current_user
 from app.models.schemas import (
     QuestionTemplateCreate,
     QuestionTemplateResponse,
     SuccessResponse,
 )
+
 
 router = APIRouter(tags=["question-templates"])
 

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.database.session import get_db
-from app.models.database import User
+from app.models.database import User, Goal
 from app.api.endpoints.auth import get_current_user
 from app.services.analytics_service import AnalyticsService
 from app.models.schemas import GoalAnalyticsResponse, EmployeeSummaryResponse
@@ -26,9 +27,6 @@ async def get_goal_analytics(
 
     if not analytics:
         raise HTTPException(status_code=404, detail="Goal not found")
-
-    # Проверяем права доступа
-    from app.models.database import Goal
 
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if goal.employee_id != current_user.id and not current_user.is_manager:  # type: ignore

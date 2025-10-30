@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from app.database.session import get_db
-from app.models.schemas import GoalCreate, GoalResponse, GoalStatus, SuccessResponse
-from app.models.database import Goal as GoalModel, GoalStep, User, Goal
+
 from app.api.endpoints.auth import get_current_user
+from app.core.logger import logger
+from app.database.session import get_db
+from app.models.schemas import GoalCreate, GoalResponse, SuccessResponse
+from app.models.database import Goal as GoalModel, GoalStep, User
 from app.services.email_service import EmailService
 from app.services.notification_service import NotificationService
-from app.core.logger import logger
 
 
 router = APIRouter(tags=["goals"])
@@ -83,7 +84,7 @@ async def create_goal(
         db.commit()
         db.refresh(db_goal)
 
-    # СОЗДАЕМ IN-APP УВЕДОМЛЕНИЯ (остальной код без изменений)
+    # СОЗДАЕМ IN-APP УВЕДОМЛЕНИЯ
     if goal.respondent_ids:
         notification_service = NotificationService(db)
         notification_service.create_goal_created_notification(
@@ -150,7 +151,6 @@ async def get_employee_goals(
     description="Получение конкретной цели по ID. Проверяются права доступа.",
 )
 async def get_goal(
-
     goal_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -163,11 +163,13 @@ async def get_goal(
     # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА - ПРОВЕРКА НА РЕСПОНДЕНТА
     is_owner = goal.employee_id == current_user.id
     is_manager = current_user.is_manager
-    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
-    
-    if not (is_owner or is_manager or is_respondent): # type: ignore
+    is_respondent = any(
+        respondent.id == current_user.id for respondent in goal.respondents
+    )
+
+    if not (is_owner or is_manager or is_respondent):  # type: ignore
         raise HTTPException(status_code=403, detail="Not authorized to view this goal")
-    
+
     goal.employee_name = goal.employee.full_name  # type: ignore
     return goal
 
@@ -210,6 +212,7 @@ async def update_goal_status(
 
     return SuccessResponse(message=f"Goal status updated to {new_status}")
 
+
 @router.get(
     "/respondent/my",
     response_model=List[GoalResponse],
@@ -227,10 +230,10 @@ async def get_my_respondent_goals(
         .filter(User.id == current_user.id)
         .all()
     )
-    
+
     for goal in goals:
-        goal.employee_name = goal.employee.full_name # type: ignore
-    
+        goal.employee_name = goal.employee.full_name  # type: ignore
+
     return goals
 
 
@@ -251,13 +254,14 @@ async def get_goal_as_respondent(
         raise HTTPException(status_code=404, detail="Goal not found")
 
     # Проверяем, является ли пользователь респондентом этой цели
-    is_respondent = any(respondent.id == current_user.id for respondent in goal.respondents)
+    is_respondent = any(
+        respondent.id == current_user.id for respondent in goal.respondents
+    )
     if not is_respondent:
         raise HTTPException(
-            status_code=403, 
-            detail="Not authorized as respondent for this goal"
+            status_code=403, detail="Not authorized as respondent for this goal"
         )
 
-    goal.employee_name = goal.employee.full_name # type: ignore
-    goal.respondent_names = [respondent.full_name for respondent in goal.respondents] # type: ignore
+    goal.employee_name = goal.employee.full_name  # type: ignore
+    goal.respondent_names = [respondent.full_name for respondent in goal.respondents]  # type: ignore
     return goal

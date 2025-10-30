@@ -1,15 +1,16 @@
 """
 Скрипт для инициализации вопросов по умолчанию в системе
 """
+
+import json
 import sys
 import os
-import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.core.logger import logger
 from app.database.session import SessionLocal
 from app.models.database import QuestionTemplate
-from app.core.logger import logger
 
 
 def init_default_questions():

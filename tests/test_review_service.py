@@ -48,10 +48,10 @@ class TestReviewService:
         # Создаем ответы
         answers = [
             Answer(
-                question_id=question1.id, score=4 # type:ignore
+                question_id=question1.id, score=4  # type:ignore
             ),  # 4/5 * 5 = 4.0 * 1.0 = 4.0 # type:ignore
             Answer(
-                question_id=question2.id, score=8 # type:ignore
+                question_id=question2.id, score=8  # type:ignore
             ),  # 8/10 * 5 = 4.0 * 2.0 = 8.0 # type:ignore
         ]
 
@@ -92,10 +92,10 @@ class TestReviewService:
         # Ответы с одинаковыми "процентами" выполнения
         answers = [
             Answer(
-                question_id=question1.id, score=4 # type:ignore
+                question_id=question1.id, score=4  # type:ignore
             ),  # 4/5 = 80% → 4.0 в 5-балльной # type:ignore
             Answer(
-                question_id=question2.id, score=8 # type:ignore
+                question_id=question2.id, score=8  # type:ignore
             ),  # 8/10 = 80% → 4.0 в 5-балльной # type:ignore
         ]
 
@@ -143,13 +143,13 @@ class TestReviewService:
         # Создаем ответы
         answers = [
             Answer(
-                question_id=professional_question.id, score=4 # type:ignore
+                question_id=professional_question.id, score=4  # type:ignore
             ),  # professional: 4/5*5=4.0 # type:ignore
             Answer(
-                question_id=personal_question.id, score=3 # type:ignore
+                question_id=personal_question.id, score=3  # type:ignore
             ),  # personal: 3/5*5=3.0 # type:ignore
             Answer(
-                question_id=development_question.id, score=5 # type:ignore
+                question_id=development_question.id, score=5  # type:ignore
             ),  # development: 5/5*5=5.0 # type:ignore
         ]
 

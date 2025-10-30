@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from typing import Dict, List
 import json
 
+from app.api.endpoints.auth import get_current_user
+from app.core.logger import logger
 from app.database.session import get_db
 from app.models.schemas import (
     Answer,
@@ -16,12 +18,11 @@ from app.models.schemas import (
     SuccessResponse,
 )
 from app.models.database import Review, RespondentReview, Goal, User
-from app.api.endpoints.auth import get_current_user
 from app.services.review_service import ReviewService
 from app.services.email_service import EmailService
 from app.services.notification_service import NotificationService
 from app.services.user_service import UserService
-from app.core.logger import logger
+
 
 router = APIRouter(tags=["reviews"])
 
@@ -82,11 +83,11 @@ async def create_review(
             status_code=400, detail="Review of this type already exists"
         )
 
-    # РАСЧЕТ БАЛЛОВ С НОВОЙ ЛОГИКОЙ
+    # РАСЧЕТ БАЛЛОВ
     review_service = ReviewService(db)
 
     if review.review_type == ReviewType.POTENTIAL:
-        # Для оценки потенциала используем специальный расчет
+        # Для оценки потенциала
         potential_scores = review_service.calculate_potential_score(review.answers)
         score = potential_scores["total_potential_score"]
 
@@ -324,7 +325,7 @@ async def create_respondent_review(
             status_code=400, detail="Respondent review already exists for this goal"
         )
 
-    # РАСЧЕТ БАЛЛОВ С НОВОЙ ЛОГИКОЙ
+    # РАСЧЕТ БАЛЛОВ
     review_service = ReviewService(db)
     score = review_service.calculate_weighted_score(
         review.answers, ReviewType.RESPONDENT

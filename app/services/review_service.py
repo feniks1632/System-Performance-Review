@@ -1,9 +1,10 @@
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
 import json
-from app.models.schemas import Answer, ReviewType
-from app.models.database import QuestionTemplate, Review
+from typing import List, Dict, Optional
+from sqlalchemy.orm import Session
+
 from app.core.logger import logger
+from app.models.database import QuestionTemplate, Review
+from app.models.schemas import Answer, ReviewType
 
 
 class ReviewService:
@@ -71,7 +72,6 @@ class ReviewService:
 
         return total_weighted_score / total_weight if total_weight > 0 else 0.0  # type: ignore
 
-    # ДОБАВИТЬ новые методы:
     def get_pending_manager_scoring_questions(self, review_id: str) -> List[Dict]:
         """Получить вопросы, ожидающие оценку руководителя"""
         review = self.db.query(Review).filter(Review.id == review_id).first()

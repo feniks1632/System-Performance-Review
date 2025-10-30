@@ -1,7 +1,6 @@
-# app/services/user_service.py
+from app.models.database import User
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.models.database import User
 
 
 class UserService:

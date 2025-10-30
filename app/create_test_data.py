@@ -4,15 +4,16 @@
 
 import sys
 import os
+
 from datetime import datetime, timedelta
 
 # Добавляем корневую директорию проекта в путь
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.core.logger import logger
+from app.core.security import get_password_hash
 from app.database.session import SessionLocal
 from app.models.database import User, QuestionTemplate, Goal
-from app.core.security import get_password_hash
-from app.core.logger import logger
 
 
 def create_test_data():
@@ -44,7 +45,7 @@ def create_test_data():
             full_name="Алексей Козлов (Сотрудник)",
             hashed_password=get_password_hash("password123"),
             is_manager=False,
-            manager_id=None,  # Установим позже
+            manager_id=None,
         )
 
         employee2 = User(

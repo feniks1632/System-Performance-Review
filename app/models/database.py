@@ -1,17 +1,17 @@
+from datetime import datetime, timezone
 from sqlalchemy import (
-    Column,
-    String,
-    Text,
-    DateTime,
     Boolean,
-    ForeignKey,
+    Column,
+    DateTime,
     Integer,
+    ForeignKey,
     Float,
+    String,
     Table,
+    Text,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 import uuid
-from datetime import datetime, timezone
 
 
 class Base(DeclarativeBase):
@@ -126,7 +126,7 @@ class Review(Base):
         DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
-    )  # Исправлено
+    )
 
     # Relationships
     goal = relationship("Goal", back_populates="reviews")
