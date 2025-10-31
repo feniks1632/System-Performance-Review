@@ -1,6 +1,5 @@
-import pytest
-from app.models.database import QuestionTemplate
 from app.database.session import SessionLocal
+from app.models.database import QuestionTemplate
 
 
 def test_question_template_creation():

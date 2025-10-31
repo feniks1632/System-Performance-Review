@@ -1,11 +1,9 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from datetime import timedelta
 
-from app.database.session import get_db
-from app.models.schemas import UserCreate, UserResponse, Token, UserLogin
-from app.models.database import User
 from app.core.security import (
     verify_password,
     get_password_hash,
@@ -13,6 +11,9 @@ from app.core.security import (
     verify_token,
 )
 from app.core.config import settings
+from app.database.session import get_db
+from app.models.database import User
+from app.models.schemas import UserCreate, UserResponse, Token, UserLogin
 
 
 router = APIRouter(tags=["authentication"])

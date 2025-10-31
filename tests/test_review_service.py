@@ -1,8 +1,8 @@
-import pytest
 from unittest.mock import Mock, patch
-from app.services.review_service import ReviewService
-from app.models.schemas import Answer, ReviewType
+
 from app.models.database import QuestionTemplate
+from app.models.schemas import Answer
+from app.services.review_service import ReviewService
 
 
 class TestReviewService:

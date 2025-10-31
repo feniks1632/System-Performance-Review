@@ -1,7 +1,6 @@
-import pytest
-from app.core.security import get_password_hash
-from app.models.database import User, Goal
 from datetime import datetime, timedelta
+
+from app.models.database import Goal, User
 
 
 def test_get_goal_analytics_success(

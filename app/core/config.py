@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 from app.core.logger import logger
 
+
 load_dotenv()
 
 
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
     )
     ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=10080)  # 7 дней
+    DEBUG: bool = Field(default=True)
 
     # Email settings
     SMTP_SERVER: str = Field(default="smtp.gmail.com")

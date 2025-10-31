@@ -1,6 +1,7 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.api.endpoints.auth import get_current_user
 from app.models.database import User
@@ -31,7 +32,7 @@ router = APIRouter(tags=["users"])
 async def get_all_managers(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Получить всех руководителей (только для админов/руководителей)"""
+    """Получить всех руководителей (только для руководителей)"""
     if not current_user.is_manager:  # type: ignore
         raise HTTPException(
             status_code=403, detail="Only managers can view managers list"

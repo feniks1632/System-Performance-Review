@@ -1,10 +1,10 @@
-# tests/test_email_content.py
-import pytest
-import base64
-from unittest.mock import patch
 from datetime import datetime, timedelta
-from app.models.database import User, Goal
+from unittest.mock import patch
+
+import base64
+
 from app.core.logger import logger
+from app.models.database import User, Goal
 
 
 class TestEmailContent:

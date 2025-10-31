@@ -1,7 +1,8 @@
-import logging
-from logging.handlers import RotatingFileHandler
-import sys
 import os
+import sys
+import logging
+
+from logging.handlers import RotatingFileHandler
 
 
 def setup_logger():
@@ -24,7 +25,7 @@ def setup_logger():
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # File handler (ротация логов) - ДОПОЛНИТЕЛЬНО
+    # File handler (ротация логов)
     log_dir = "logs"
     log_file = os.path.join(log_dir, "performance_review.log")
 

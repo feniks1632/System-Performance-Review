@@ -211,7 +211,6 @@ class AnalyticsService:
 
     def get_employee_summary(self, employee_id: str) -> Dict[str, Any]:
         """Сводная аналитика по всем целям сотрудника"""
-        from app.models.database import Goal
 
         goals = self.db.query(Goal).filter(Goal.employee_id == employee_id).all()
 

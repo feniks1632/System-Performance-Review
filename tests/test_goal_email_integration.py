@@ -1,6 +1,5 @@
-# tests/test_goal_email_integration.py
-import pytest
 from unittest.mock import patch
+
 from app.core.security import get_password_hash
 from app.models.database import User
 

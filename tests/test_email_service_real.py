@@ -1,6 +1,4 @@
-# tests/test_email_real.py
 import pytest
-from app.services.email_service import EmailService
 
 
 def test_email_service_real_methods(email_service):

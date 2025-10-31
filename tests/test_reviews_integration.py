@@ -1,11 +1,4 @@
-import pytest
 from app.models.schemas import ReviewType
-from fastapi.testclient import TestClient
-from app.main import app
-from app.database.session import SessionLocal
-from app.models.database import User, Goal, QuestionTemplate
-from app.core.security import get_password_hash
-import json
 
 
 class TestReviewsIntegration:

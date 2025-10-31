@@ -1,9 +1,12 @@
+import logging
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+
 from app.core.config import settings
 from app.database.session import engine
 from app.models.database import Base
-import logging
-from contextlib import asynccontextmanager
+from app.admin.admin import admin
 
 logging.basicConfig(
     level=logging.DEBUG,  # Показывать всё, включая debug
@@ -82,6 +85,8 @@ app.include_router(
     prefix="/api/v1/question-templates",
     tags=["question-templates"],
 )
+
+admin.mount_to(app)
 
 
 @app.get("/")

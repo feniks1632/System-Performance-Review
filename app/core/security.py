@@ -1,8 +1,9 @@
+from typing import Optional
+
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from typing import Optional
 
 from app.core.config import settings
 

@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
+
+from sqlalchemy.orm import Session
 
 from app.core.logger import logger
 from app.models.database import Notification

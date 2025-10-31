@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.api.endpoints.auth import get_current_user
 from app.database.session import get_db
 from app.models.database import Goal, GoalStep, User
-from app.api.endpoints.auth import get_current_user
 from app.models.schemas import (
     GoalStepResponse,
     GoalStepCreate,
@@ -79,7 +80,7 @@ async def get_goal_steps(
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
 
-    # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА - ПРОВЕРКА НА РЕСПОНДЕНТА
+    # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА
     is_owner = goal.employee_id == current_user.id
     is_manager = current_user.is_manager
     is_respondent = any(

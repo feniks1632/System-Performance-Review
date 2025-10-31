@@ -1,7 +1,3 @@
-# tests/test_notification_service.py
-import pytest
-from datetime import datetime, timedelta
-from app.services.notification_service import NotificationService
 from app.models.database import User, Notification
 
 

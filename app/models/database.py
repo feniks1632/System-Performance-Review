@@ -1,3 +1,5 @@
+import uuid
+
 from datetime import datetime, timezone
 from sqlalchemy import (
     Boolean,
@@ -11,7 +13,6 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
-import uuid
 
 
 class Base(DeclarativeBase):
@@ -45,7 +46,7 @@ class User(Base):
     # СВЯЗЬ С РУКОВОДИТЕЛЕМ
     manager_id = Column(String, ForeignKey("users.id"), nullable=True)
 
-    # Relationships
+    # Relationships(обратные связи)
     goals = relationship(
         "Goal", back_populates="employee", foreign_keys="Goal.employee_id"
     )

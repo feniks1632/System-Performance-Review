@@ -1,7 +1,4 @@
-# tests/test_user_service.py
-import pytest
 from app.core.security import get_password_hash
-from app.services.user_service import UserService
 from app.models.database import User
 
 

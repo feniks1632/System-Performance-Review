@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.core.logger import logger
+from app.main import app
 
 
 def debug_register():

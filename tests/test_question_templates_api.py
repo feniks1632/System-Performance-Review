@@ -1,9 +1,10 @@
-import pytest
 from fastapi.testclient import TestClient
-from app.main import app
-from app.database.session import SessionLocal
-from app.models.database import QuestionTemplate, User
+
 from app.core.security import get_password_hash
+from app.database.session import SessionLocal
+from app.main import app
+from app.models.database import User
+
 
 client = TestClient(app)
 

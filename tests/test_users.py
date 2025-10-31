@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_get_current_user(client, test_user_data):
     """Тест получения информации о текущем пользователе"""
     # Регистрируем и логинимся

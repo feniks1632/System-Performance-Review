@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
-import pytest
 from fastapi.testclient import TestClient
-from app.main import app
-from app.database.session import engine, get_db
-from app.models.database import Base
-from sqlalchemy import text
 from unittest.mock import MagicMock, patch
+from sqlalchemy import text
+
+import pytest
+
+from app.database.session import engine
+from app.main import app
+from app.models.database import Base
 from app.services.email_service import EmailService
 
 
@@ -321,3 +323,127 @@ def manager_auth_headers(client, test_manager_user_complete):
 
     token = login_response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+# Добавьте в конец вашего conftest.py исправленные фикстуры
+
+
+@pytest.fixture
+def test_manager_user_for_admin(db_session):
+    """Создает тестового менеджера специально для админки"""
+    from app.core.security import get_password_hash
+    from app.models.database import User
+
+    # Удаляем если существует
+    db_session.query(User).filter(User.email == "admin_manager@company.com").delete()
+
+    manager = User(
+        email="admin_manager@company.com",
+        hashed_password=get_password_hash("adminpassword123"),
+        full_name="Admin Test Manager",
+        is_manager=True,
+        is_active=True,
+    )
+    db_session.add(manager)
+    db_session.commit()
+    db_session.refresh(manager)
+    return manager
+
+
+@pytest.fixture
+def test_regular_user_for_admin(db_session):
+    """Создает тестового обычного пользователя специально для админки"""
+    from app.core.security import get_password_hash
+    from app.models.database import User
+
+    # Удаляем если существует
+    db_session.query(User).filter(User.email == "admin_regular@company.com").delete()
+
+    user = User(
+        email="admin_regular@company.com",
+        hashed_password=get_password_hash("adminpassword123"),
+        full_name="Admin Regular User",
+        is_manager=False,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def inactive_manager_for_admin(db_session):
+    """Создает неактивного менеджера для тестов админки"""
+    from app.core.security import get_password_hash
+    from app.models.database import User
+
+    # Удаляем если существует
+    db_session.query(User).filter(User.email == "inactive_admin@company.com").delete()
+
+    manager = User(
+        email="inactive_admin@company.com",
+        hashed_password=get_password_hash("adminpassword123"),
+        full_name="Inactive Admin Manager",
+        is_manager=True,
+        is_active=False,
+    )
+    db_session.add(manager)
+    db_session.commit()
+    db_session.refresh(manager)
+    return manager
+
+
+@pytest.fixture
+def admin_auth_headers(client, test_manager_user_for_admin):
+    """Получает авторизационные куки для админки - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
+    # Логинимся как менеджер в админку
+    login_data = {
+        "username": "admin_manager@company.com",
+        "password": "adminpassword123",
+    }
+
+    response = client.post("/admin/login", data=login_data, follow_redirects=False)
+
+    # ИСПРАВЛЕНИЕ: используем правильный способ получения кук
+    cookies = []
+    if "set-cookie" in response.headers:
+        # Для множественных кук в заголовках
+        cookie_header = response.headers["set-cookie"]
+        if isinstance(cookie_header, str):
+            # Если это одна строка, разбиваем по запятым для отдельных кук
+            cookies = [cookie.strip() for cookie in cookie_header.split(",")]
+        elif hasattr(cookie_header, "__iter__"):
+            # Если это итерируемый объект (список)
+            cookies = list(cookie_header)
+
+    # Формируем заголовок Cookie
+    cookie_parts = []
+    for cookie in cookies:
+        # Берем только первую часть до точки с запятой (name=value)
+        cookie_part = cookie.split(";")[0].strip()
+        if cookie_part:
+            cookie_parts.append(cookie_part)
+
+    cookie_header = "; ".join(cookie_parts)
+
+    return {"Cookie": cookie_header}
+
+
+@pytest.fixture
+def admin_authenticated_client(client, admin_auth_headers):
+    """Клиент с аутентификацией в админке"""
+    client.headers.update(admin_auth_headers)
+    return client
+
+
+@pytest.fixture
+def admin_login_session(client, test_manager_user_for_admin):
+    """Создает сессию входа в админку и возвращает куки"""
+    login_data = {
+        "username": "admin_manager@company.com",
+        "password": "adminpassword123",
+    }
+
+    response = client.post("/admin/login", data=login_data, follow_redirects=False)
+    return response.cookies

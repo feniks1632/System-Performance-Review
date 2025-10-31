@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.logger import logger
 from app.core.security import get_password_hash
 from app.database.session import SessionLocal
-from app.models.database import User, QuestionTemplate, Goal
+from app.models.database import User, Goal
 
 
 def create_test_data():
@@ -24,7 +24,7 @@ def create_test_data():
         logger.info("Создание тестовых данных...")
 
         # 1. Создаем тестовых пользователей
-        print("Создаем пользователей...")
+        logger.info("Создаем пользователей...")
 
         manager1 = User(
             email="manager1@company.com",
@@ -77,10 +77,12 @@ def create_test_data():
         employee2.manager_id = manager2.id
         db.commit()
 
-        print(f"Создано пользователей: 2 руководителя, 2 сотрудника, 1 респондент")
+        logger.info(
+            f"Создано пользователей: 2 руководителя, 2 сотрудника, 1 респондент"
+        )
 
         # 2. Создаем тестовые цели
-        print("Создаем тестовые цели...")
+        logger.info("Создаем тестовые цели...")
 
         future_date = datetime.now() + timedelta(days=90)
 
@@ -110,9 +112,10 @@ def create_test_data():
         # Добавляем респондентов к целям (после создания целей)
         goal1.respondents.append(respondent1)
         goal2.respondents.append(respondent1)
+
         db.commit()
 
-        (f"Создано тестовых целей: 2")
+        logger.info(f"Создано тестовых целей: 2")
 
         logger.info("\nТестовые данные успешно созданы!")
         logger.info("\nСозданные учетные записи:")

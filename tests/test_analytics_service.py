@@ -1,7 +1,3 @@
-import pytest
-from datetime import datetime, timedelta
-
-
 def test_calculate_scores_empty_data(analytics_service):
     """Тест расчета баллов с пустыми данными"""
     scores = analytics_service._calculate_scores([], [])

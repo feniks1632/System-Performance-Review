@@ -2,9 +2,9 @@
 Скрипт для инициализации вопросов по умолчанию в системе
 """
 
+import os
 import json
 import sys
-import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

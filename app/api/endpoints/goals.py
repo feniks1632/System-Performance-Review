@@ -1,12 +1,13 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.api.endpoints.auth import get_current_user
 from app.core.logger import logger
 from app.database.session import get_db
-from app.models.schemas import GoalCreate, GoalResponse, SuccessResponse
 from app.models.database import Goal as GoalModel, GoalStep, User
+from app.models.schemas import GoalCreate, GoalResponse, SuccessResponse
 from app.services.email_service import EmailService
 from app.services.notification_service import NotificationService
 
@@ -160,7 +161,7 @@ async def get_goal(
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
 
-    # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА - ПРОВЕРКА НА РЕСПОНДЕНТА
+    # РАСШИРЕННАЯ ПРОВЕРКА ПРАВ ДОСТУПА
     is_owner = goal.employee_id == current_user.id
     is_manager = current_user.is_manager
     is_respondent = any(

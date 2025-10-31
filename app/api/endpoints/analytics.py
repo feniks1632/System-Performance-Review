@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.api.endpoints.auth import get_current_user
 from app.database.session import get_db
 from app.models.database import User, Goal
-from app.api.endpoints.auth import get_current_user
-from app.services.analytics_service import AnalyticsService
 from app.models.schemas import GoalAnalyticsResponse, EmployeeSummaryResponse
+from app.services.analytics_service import AnalyticsService
 
 router = APIRouter(tags=["analytics"])
 

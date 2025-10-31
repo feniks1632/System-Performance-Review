@@ -1,9 +1,7 @@
-# tests/test_email_service.py
-import pytest
-from unittest.mock import patch, MagicMock
-import smtplib
 from datetime import datetime, timedelta
-from app.models.database import User, Goal
+from unittest.mock import patch
+
+from app.models.database import Goal, User
 
 
 class TestEmailService:

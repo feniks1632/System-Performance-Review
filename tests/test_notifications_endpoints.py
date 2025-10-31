@@ -1,6 +1,3 @@
-# tests/test_notifications_endpoints.py
-import pytest
-from app.core.security import get_password_hash
 from app.models.database import User, Notification
 
 

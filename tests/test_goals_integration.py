@@ -1,5 +1,6 @@
-import pytest
-from app.models.schemas import GoalStatus
+import uuid
+
+from app.core.security import get_password_hash
 
 
 class TestGoalsIntegration:
@@ -16,8 +17,6 @@ class TestGoalsIntegration:
         )
         if not user:
             # Если пользователь не найден, создаем нового
-            from app.core.security import get_password_hash
-            import uuid
 
             unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
 
