@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from app.core.logger import logger
+
 
 class TestRespondentFunctionalityFinal:
     """Финальные тесты функционала респондентов с исправлениями"""
@@ -475,4 +477,4 @@ def test_respondent_workflow_fixed(client, test_employee_user, db_session):
     response = client.get(f"/api/v1/goals/{goal_id}/steps", headers=respondent_headers)
     assert response.status_code == 200
 
-    print("✅ Весь workflow респондента работает корректно!")
+    logger.info("✅ Весь workflow респондента работает корректно!")

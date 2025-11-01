@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from app.core.logger import logger
 from app.models.database import Goal, User
 
 
@@ -110,7 +111,7 @@ class TestEmailService:
                 elif len(args) > 0:
                     sent_emails.append(args[0])
 
-            print(f"DEBUG sent_emails: {sent_emails}")
+            logger.info(f"DEBUG sent_emails: {sent_emails}")
             assert set(sent_emails) == set(respondent_emails)
 
     def test_notify_employee_about_final_review_success(

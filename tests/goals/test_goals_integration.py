@@ -56,7 +56,7 @@ class TestGoalsIntegration:
         # Обновляем статус - отправляем как JSON объект
         status_response = client.put(
             f"/api/v1/goals/{goal_id}/status",
-            json={"status": "completed"},  # Исправлено: отправляем JSON объект
+            json={"status": "completed"},  # Отправляем JSON объект
             headers=auth_headers,
         )
 

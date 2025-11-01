@@ -1,9 +1,11 @@
 import pytest
 
+from app.core.logger import logger
+
 
 def test_email_service_real_methods(email_service):
     """Тест реальных методов EmailService (без mock)"""
-    # Просто проверяем что методы существуют и вызываются
+    # Проверяем что методы существуют и вызываются
     try:
         # notify_manager_about_pending_review
         result1 = email_service.notify_manager_about_pending_review(
@@ -11,7 +13,7 @@ def test_email_service_real_methods(email_service):
             employee_name="Test Employee",
             manager_email="manager@test.com",
         )
-        print(f"notify_manager result: {result1}")
+        logger.info(f"notify_manager result: {result1}")
 
         # notify_respondents_about_review_request
         result2 = email_service.notify_respondents_about_review_request(
@@ -19,7 +21,7 @@ def test_email_service_real_methods(email_service):
             employee_name="Test Employee",
             respondent_emails=["test1@test.com", "test2@test.com"],
         )
-        print(f"notify_respondents result: {result2}")
+        logger.info(f"notify_respondents result: {result2}")
 
         # notify_employee_about_final_review
         result3 = email_service.notify_employee_about_final_review(
@@ -28,8 +30,8 @@ def test_email_service_real_methods(email_service):
             manager_name="Test Manager",
             final_rating="A",
         )
-        print(f"notify_employee result: {result3}")
+        logger.info(f"notify_employee result: {result3}")
 
     except Exception as e:
-        print(f"Error in email service methods: {e}")
+        logger.info(f"Error in email service methods: {e}")
         pytest.fail(f"Email service methods should not raise exceptions: {e}")

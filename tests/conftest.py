@@ -5,10 +5,14 @@ from sqlalchemy import text
 
 import pytest
 
-from app.database.session import engine
+from app.core.security import get_password_hash
+from app.database.session import engine, get_db
 from app.main import app
-from app.models.database import Base
+from app.models.database import Base, User, QuestionTemplate, Goal
 from app.services.email_service import EmailService
+from app.services.analytics_service import AnalyticsService
+from app.services.notification_service import NotificationService
+from app.services.user_service import UserService
 
 
 @pytest.fixture(scope="function")
@@ -45,8 +49,6 @@ def test_manager_data():
 @pytest.fixture
 def auth_headers(client, test_user_data, db_session):
     """Фикстура для получения заголовков аутентификации"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     # Создаем пользователя с правильным хешем пароля
     user_data = test_user_data.copy()
@@ -71,8 +73,6 @@ def auth_headers(client, test_user_data, db_session):
 @pytest.fixture
 def test_manager_user(db_session):
     """Создает тестового менеджера с правильным хешем пароля"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     manager = User(
         email="manager@test.com",
@@ -88,7 +88,6 @@ def test_manager_user(db_session):
 @pytest.fixture
 def analytics_service(db_session):
     """Фикстура для сервиса аналитики"""
-    from app.services.analytics_service import AnalyticsService
 
     return AnalyticsService(db_session)
 
@@ -96,7 +95,6 @@ def analytics_service(db_session):
 @pytest.fixture
 def db_session():
     """Фикстура для сессии базы данных"""
-    from app.database.session import get_db
 
     db = next(get_db())
 
@@ -158,7 +156,6 @@ def create_test_goal(client, auth_headers, test_goal_data):
 @pytest.fixture
 def notification_service(db_session):
     """Фикстура для сервиса уведомлений"""
-    from app.services.notification_service import NotificationService
 
     return NotificationService(db_session)
 
@@ -166,7 +163,6 @@ def notification_service(db_session):
 @pytest.fixture
 def user_service(db_session):
     """Фикстура для сервиса пользователей"""
-    from app.services.user_service import UserService
 
     return UserService(db_session)
 
@@ -174,7 +170,6 @@ def user_service(db_session):
 @pytest.fixture
 def test_question_templates(db_session):
     """Создает тестовые шаблоны вопросов"""
-    from app.models.database import QuestionTemplate
 
     # Очищаем существующие вопросы
     db_session.query(QuestionTemplate).delete()
@@ -238,8 +233,6 @@ def test_question_templates(db_session):
 @pytest.fixture
 def test_employee_user(db_session):
     """Создает тестового сотрудника"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     employee = User(
         email="employee1@company.com",
@@ -256,8 +249,6 @@ def test_employee_user(db_session):
 @pytest.fixture
 def test_manager_user_complete(db_session):
     """Создает тестового руководителя с правильными данными"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     manager = User(
         email="manager1@company.com",
@@ -274,7 +265,6 @@ def test_manager_user_complete(db_session):
 @pytest.fixture
 def test_goal_with_employee(db_session, test_employee_user):
     """Создает тестовую цель для сотрудника"""
-    from app.models.database import Goal
 
     future_date = datetime.now() + timedelta(days=90)
 
@@ -325,14 +315,9 @@ def manager_auth_headers(client, test_manager_user_complete):
     return {"Authorization": f"Bearer {token}"}
 
 
-# Добавьте в конец вашего conftest.py исправленные фикстуры
-
-
 @pytest.fixture
 def test_manager_user_for_admin(db_session):
     """Создает тестового менеджера специально для админки"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     # Удаляем если существует
     db_session.query(User).filter(User.email == "admin_manager@company.com").delete()
@@ -353,8 +338,6 @@ def test_manager_user_for_admin(db_session):
 @pytest.fixture
 def test_regular_user_for_admin(db_session):
     """Создает тестового обычного пользователя специально для админки"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     # Удаляем если существует
     db_session.query(User).filter(User.email == "admin_regular@company.com").delete()
@@ -375,8 +358,6 @@ def test_regular_user_for_admin(db_session):
 @pytest.fixture
 def inactive_manager_for_admin(db_session):
     """Создает неактивного менеджера для тестов админки"""
-    from app.core.security import get_password_hash
-    from app.models.database import User
 
     # Удаляем если существует
     db_session.query(User).filter(User.email == "inactive_admin@company.com").delete()
@@ -396,7 +377,7 @@ def inactive_manager_for_admin(db_session):
 
 @pytest.fixture
 def admin_auth_headers(client, test_manager_user_for_admin):
-    """Получает авторизационные куки для админки - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
+    """Получает авторизационные куки для админки"""
     # Логинимся как менеджер в админку
     login_data = {
         "username": "admin_manager@company.com",
@@ -405,7 +386,7 @@ def admin_auth_headers(client, test_manager_user_for_admin):
 
     response = client.post("/admin/login", data=login_data, follow_redirects=False)
 
-    # ИСПРАВЛЕНИЕ: используем правильный способ получения кук
+    # Используем правильный способ получения кук
     cookies = []
     if "set-cookie" in response.headers:
         # Для множественных кук в заголовках

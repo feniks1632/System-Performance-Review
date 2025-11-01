@@ -1,4 +1,5 @@
 from app.models.schemas import ReviewType
+from app.core.logger import logger
 
 
 class TestReviewsIntegration:
@@ -120,3 +121,55 @@ class TestReviewsIntegration:
         )
         assert response.status_code == 403
         assert "Not authorized as respondent" in response.json()["detail"]
+
+
+def test_review_process_integration(
+    client,
+    test_goal_with_employee,
+    test_question_templates,
+    employee_auth_headers,
+    manager_auth_headers,
+):
+    """Тест интеграции: цель → вопросы → ревью → аналитика"""
+    logger.info("ТЕСТ ИНТЕГРАЦИИ ПРОЦЕССА РЕВЬЮ")
+
+    goal_id = test_goal_with_employee.id
+
+    # 1. Интеграция: вопросы + создание ревью
+    questions_response = client.get(
+        "/api/v1/question-templates/?question_type=self", headers=employee_auth_headers
+    )
+    questions = questions_response.json()
+
+    # Создаем ревью используя полученные вопросы
+    review_data = {
+        "goal_id": goal_id,
+        "review_type": "self",
+        "answers": [
+            {
+                "question_id": questions[0]["id"],
+                "answer": "Интеграционный тест: работаю над улучшением навыков",
+                "score": 4.0,
+            }
+        ],
+    }
+
+    review_response = client.post(
+        "/api/v1/reviews/", json=review_data, headers=employee_auth_headers
+    )
+    assert review_response.status_code == 200
+
+    # 2. Интеграция: ревью → аналитика
+    analytics_response = client.get(
+        f"/api/v1/analytics/goal/{goal_id}", headers=manager_auth_headers
+    )
+    assert analytics_response.status_code == 200
+
+    analytics = analytics_response.json()
+
+    # Проверяем что аналитика учитывает созданное ревью
+    assert analytics["goal_id"] == goal_id
+    assert "scores" in analytics
+    assert "recommendations" in analytics
+
+    logger.info("Интеграция цель→вопросы→ревью→аналитика работает")
