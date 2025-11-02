@@ -93,7 +93,7 @@ async def create_review(
         score = potential_scores["total_potential_score"]
 
         # Сохраняем детальные баллы потенциала в JSON
-        potential_details = json.dumps(potential_scores)
+        potential_details = json.dumps(potential_scores, ensure_ascii=False)
     else:
         # Для других типов используем стандартный расчет
         score = review_service.calculate_weighted_score(
@@ -111,12 +111,12 @@ async def create_review(
         review_type=review.review_type,
         calculated_score=score,
         final_feedback=(
-            json.dumps(recommendations) if recommendations else None
+            json.dumps(recommendations, ensure_ascii=False) if recommendations else None
         ),  # Сохраняем рекомендации
     )
 
     # Сохраняем ответы в соответствующие поля
-    answers_json = json.dumps([answer.model_dump() for answer in review.answers])
+    answers_json = json.dumps([answer.model_dump() for answer in review.answers], ensure_ascii=False)
 
     if review.review_type == ReviewType.SELF:
         db_review.self_evaluation_answers = answers_json  # type: ignore
@@ -348,7 +348,7 @@ async def create_respondent_review(
     db_review = RespondentReview(
         goal_id=review.goal_id,
         respondent_id=current_user.id,
-        answers=json.dumps([answer.model_dump() for answer in review.answers]),
+        answers=json.dumps([answer.model_dump() for answer in review.answers], ensure_ascii=False),
         comments=enhanced_comments,  # type: ignore
     )
 
@@ -458,7 +458,7 @@ async def score_manager_questions(
             for answer in answers_data:
                 if answer.get("question_id") == score_data.question_id:
                     answer["score"] = score_data.score
-        review.self_evaluation_answers = json.dumps(answers_data)  # type: ignore
+        review.self_evaluation_answers = json.dumps(answers_data, ensure_ascii=False)  # type: ignore
 
     elif review.review_type == ReviewType.MANAGER and review.manager_evaluation_answers:  # type: ignore
         answers_data = json.loads(review.manager_evaluation_answers)  # type: ignore
@@ -466,7 +466,7 @@ async def score_manager_questions(
             for answer in answers_data:
                 if answer.get("question_id") == score_data.question_id:
                     answer["score"] = score_data.score
-        review.manager_evaluation_answers = json.dumps(answers_data)  # type: ignore
+        review.manager_evaluation_answers = json.dumps(answers_data, ensure_ascii=False)  # type: ignore
 
     elif review.review_type == ReviewType.POTENTIAL and review.potential_evaluation_answers:  # type: ignore
         answers_data = json.loads(review.potential_evaluation_answers)  # type: ignore
@@ -474,7 +474,7 @@ async def score_manager_questions(
             for answer in answers_data:
                 if answer.get("question_id") == score_data.question_id:
                     answer["score"] = score_data.score
-        review.potential_evaluation_answers = json.dumps(answers_data)  # type: ignore
+        review.potential_evaluation_answers = json.dumps(answers_data, ensure_ascii=False)  # type: ignore
 
     # Проверяем, что answers_data была инициализирована
     if answers_data is None:

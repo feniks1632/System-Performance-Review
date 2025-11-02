@@ -40,7 +40,7 @@ def init_default_questions():
                 "max_score": 10,
                 "order_index": 1,
                 "trigger_words": json.dumps(
-                    ["достижен", "результат", "успех", "рост", "улучшен", "оптимизац"]
+                    ["достижен", "результат", "успех", "рост", "улучшен", "оптимизац"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": True,
@@ -53,7 +53,7 @@ def init_default_questions():
                 "max_score": 10,
                 "order_index": 2,
                 "trigger_words": json.dumps(
-                    ["вклад", "личный", "инициатив", "ответствен"]
+                    ["вклад", "личный", "инициатив", "ответствен"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": True,
@@ -65,7 +65,7 @@ def init_default_questions():
                 "weight": 1.2,
                 "max_score": 10,
                 "order_index": 3,
-                "trigger_words": json.dumps(["развит", "навыки", "обучен", "план"]),
+                "trigger_words": json.dumps(["развит", "навыки", "обучен", "план"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": True,
             },
@@ -76,7 +76,7 @@ def init_default_questions():
                 "weight": 1.1,
                 "max_score": 10,
                 "order_index": 4,
-                "trigger_words": json.dumps(["улучшен", "изменен", "опыт", "ошибк"]),
+                "trigger_words": json.dumps(["улучшен", "изменен", "опыт", "ошибк"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": True,
             },
@@ -88,7 +88,7 @@ def init_default_questions():
                 "max_score": 10,
                 "order_index": 5,
                 "trigger_words": json.dumps(
-                    ["коммуникац", "взаимодейств", "общен", "команд"]
+                    ["коммуникац", "взаимодейств", "общен", "команд"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": False,
@@ -101,7 +101,7 @@ def init_default_questions():
                 "max_score": 10,
                 "order_index": 6,
                 "trigger_words": json.dumps(
-                    ["удовлетворен", "оценка", "результат", "выполнен"]
+                    ["удовлетворен", "оценка", "результат", "выполнен"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": False,
@@ -117,7 +117,7 @@ def init_default_questions():
                 "weight": 2.0,
                 "max_score": 10,
                 "order_index": 1,
-                "trigger_words": json.dumps(["результат", "достижен", "план", "KPI"]),
+                "trigger_words": json.dumps(["результат", "достижен", "план", "KPI"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -129,7 +129,7 @@ def init_default_questions():
                 "max_score": 10,  # Текстовая оценка - балл не нужен
                 "order_index": 2,
                 "trigger_words": json.dumps(
-                    ["качества", "личные", "ответствен", "инициатив"]
+                    ["качества", "личные", "ответствен", "инициатив"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": True,
@@ -142,7 +142,7 @@ def init_default_questions():
                 "max_score": 10,  # Текстовая оценка - балл не нужен
                 "order_index": 3,
                 "trigger_words": json.dumps(
-                    ["вклад", "результат", "влияние", "ценность"]
+                    ["вклад", "результат", "влияние", "ценность"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": True,
@@ -155,7 +155,7 @@ def init_default_questions():
                 "max_score": 10,
                 "order_index": 4,
                 "trigger_words": json.dumps(
-                    ["коммуникац", "взаимодейств", "команд", "общен"]
+                    ["коммуникац", "взаимодейств", "команд", "общен"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": False,
@@ -168,7 +168,7 @@ def init_default_questions():
                 "max_score": 10,  # Текстовая оценка - балл не нужен
                 "order_index": 5,
                 "trigger_words": json.dumps(
-                    ["улучшен", "рекомендац", "развит", "рост"]
+                    ["улучшен", "рекомендац", "развит", "рост"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": True,
@@ -180,7 +180,7 @@ def init_default_questions():
                 "weight": 1.4,
                 "max_score": 10,
                 "order_index": 6,
-                "trigger_words": json.dumps(["рейтинг", "оценка", "итог", "результат"]),
+                "trigger_words": json.dumps(["рейтинг", "оценка", "итог", "результат"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -197,7 +197,7 @@ def init_default_questions():
                 "max_score": 5,
                 "order_index": 1,
                 "trigger_words": json.dumps(
-                    ["профессионал", "качества", "навыки", "компетенц"]
+                    ["профессионал", "качества", "навыки", "компетенц"], ensure_ascii=False
                 ),
                 "options_json": json.dumps(
                     [
@@ -231,7 +231,7 @@ def init_default_questions():
                             "value": 1.0,
                             "order_index": 5,
                         },
-                    ]
+                    ], ensure_ascii=False
                 ),
                 "requires_manager_scoring": False,
             },
@@ -243,7 +243,7 @@ def init_default_questions():
                 "weight": 1.3,
                 "max_score": 4,
                 "order_index": 2,
-                "trigger_words": json.dumps(["личные", "качества", "характер"]),
+                "trigger_words": json.dumps(["личные", "качества", "характер"], ensure_ascii=False),
                 "options_json": json.dumps(
                     [
                         {
@@ -270,7 +270,7 @@ def init_default_questions():
                             "value": 1.0,
                             "order_index": 4,
                         },
-                    ]
+                    ], ensure_ascii=False
                 ),
                 "requires_manager_scoring": False,
             },
@@ -282,7 +282,7 @@ def init_default_questions():
                 "max_score": 1,
                 "order_index": 3,
                 "trigger_words": json.dumps(
-                    ["мотивац", "1:1", "дополнительн", "руководств"]
+                    ["мотивац", "1:1", "дополнительн", "руководств"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": False,
@@ -295,7 +295,7 @@ def init_default_questions():
                 "max_score": 1,
                 "order_index": 4,
                 "trigger_words": json.dumps(
-                    ["информац", "проблем", "негатив", "результат"]
+                    ["информац", "проблем", "негатив", "результат"], ensure_ascii=False
                 ),
                 "options_json": None,
                 "requires_manager_scoring": False,
@@ -307,7 +307,7 @@ def init_default_questions():
                 "weight": 1.0,
                 "max_score": 4,
                 "order_index": 5,
-                "trigger_words": json.dumps(["развит", "трек", "роли", "интерес"]),
+                "trigger_words": json.dumps(["развит", "трек", "роли", "интерес"], ensure_ascii=False),
                 "options_json": json.dumps(
                     [
                         {
@@ -334,7 +334,7 @@ def init_default_questions():
                             "value": 1.0,
                             "order_index": 4,
                         },
-                    ]
+                    ], ensure_ascii=False
                 ),
                 "requires_manager_scoring": False,
             },
@@ -345,7 +345,7 @@ def init_default_questions():
                 "weight": 1.0,
                 "max_score": 1,
                 "order_index": 6,
-                "trigger_words": json.dumps(["преемник", "замена", "продолжен"]),
+                "trigger_words": json.dumps(["преемник", "замена", "продолжен"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -356,7 +356,7 @@ def init_default_questions():
                 "weight": 1.0,
                 "max_score": 3,
                 "order_index": 7,
-                "trigger_words": json.dumps(["готов", "срок", "время", "план"]),
+                "trigger_words": json.dumps(["готов", "срок", "время", "план"], ensure_ascii=False),
                 "options_json": json.dumps(
                     [
                         {
@@ -377,7 +377,7 @@ def init_default_questions():
                             "value": 1.0,
                             "order_index": 3,
                         },
-                    ]
+                    ], ensure_ascii=False
                 ),
                 "requires_manager_scoring": False,
             },
@@ -388,7 +388,7 @@ def init_default_questions():
                 "weight": 1.0,
                 "max_score": 10,
                 "order_index": 8,
-                "trigger_words": json.dumps(["риск", "уход", "удержан", "лояльност"]),
+                "trigger_words": json.dumps(["риск", "уход", "удержан", "лояльност"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -403,7 +403,7 @@ def init_default_questions():
                 "weight": 1.5,
                 "max_score": 10,
                 "order_index": 1,
-                "trigger_words": json.dumps(["результат", "достижен", "план"]),
+                "trigger_words": json.dumps(["результат", "достижен", "план"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -414,7 +414,7 @@ def init_default_questions():
                 "weight": 1.2,
                 "max_score": 10,  # Текстовая оценка
                 "order_index": 2,
-                "trigger_words": json.dumps(["качества", "личные", "помогл"]),
+                "trigger_words": json.dumps(["качества", "личные", "помогл"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": True,
             },
@@ -425,7 +425,7 @@ def init_default_questions():
                 "weight": 1.3,
                 "max_score": 10,
                 "order_index": 3,
-                "trigger_words": json.dumps(["взаимодейств", "коммуникац", "качество"]),
+                "trigger_words": json.dumps(["взаимодейств", "коммуникац", "качество"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": False,
             },
@@ -436,7 +436,7 @@ def init_default_questions():
                 "weight": 1.1,
                 "max_score": 10,  # Текстовая оценка
                 "order_index": 4,
-                "trigger_words": json.dumps(["улучшен", "рекомендац", "совет"]),
+                "trigger_words": json.dumps(["улучшен", "рекомендац", "совет"], ensure_ascii=False),
                 "options_json": None,
                 "requires_manager_scoring": True,
             },
