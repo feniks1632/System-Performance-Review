@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj": {}
+    "/home/hovard/Dev/python/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj": {}
   },
   "projects": {
-    "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj": {
+    "/home/hovard/Dev/python/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj",
+        "projectUniqueName": "/home/hovard/Dev/python/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj",
         "projectName": "System-Performance-Review-Front-v2",
-        "projectPath": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj",
-        "packagesPath": "/home/oleg/.nuget/packages/",
-        "outputPath": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/obj/",
+        "projectPath": "/home/hovard/Dev/python/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj",
+        "packagesPath": "/home/hovard/.nuget/packages/",
+        "outputPath": "/home/hovard/Dev/python/System-Performance-Review/Front/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/oleg/.nuget/NuGet/NuGet.Config"
+          "/home/hovard/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,6 +32,11 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -78,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.121/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.415/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

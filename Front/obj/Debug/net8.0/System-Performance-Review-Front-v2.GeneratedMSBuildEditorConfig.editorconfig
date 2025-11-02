@@ -9,139 +9,139 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = System_Performance_Review_Front_v2
 build_property.RootNamespace = System_Performance_Review_Front_v2
-build_property.ProjectDir = /home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/
+build_property.ProjectDir = /home/hovard/Dev/python/System-Performance-Review/Front/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = /home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front
+build_property.MSBuildProjectDirectory = /home/hovard/Dev/python/System-Performance-Review/Front
 build_property._RazorSourceGeneratorDebug = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Analytics/GoalAnalytics.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Analytics/GoalAnalytics.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQW5hbHl0aWNzL0dvYWxBbmFseXRpY3MuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Analytics/Index.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Analytics/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQW5hbHl0aWNzL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Goals/Create.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Goals/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR29hbHMvQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Goals/Details.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Goals/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR29hbHMvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Goals/Index.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Goals/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR29hbHMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Goals/RespondentGoalDetails.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Goals/RespondentGoalDetails.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR29hbHMvUmVzcG9uZGVudEdvYWxEZXRhaWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Goals/RespondentGoals.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Goals/RespondentGoals.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR29hbHMvUmVzcG9uZGVudEdvYWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Home/Dashboard.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Home/Dashboard.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9EYXNoYm9hcmQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Home/Index.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Home/Login.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Home/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Mb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Home/Register.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Home/Register.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9SZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Notifications/Index.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Notifications/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTm90aWZpY2F0aW9ucy9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/QuestionTemplates/Create.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/QuestionTemplates/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb25UZW1wbGF0ZXMvQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/QuestionTemplates/Details.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/QuestionTemplates/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb25UZW1wbGF0ZXMvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/QuestionTemplates/Edit.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/QuestionTemplates/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb25UZW1wbGF0ZXMvRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/QuestionTemplates/Index.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/QuestionTemplates/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb25UZW1wbGF0ZXMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/RespondentReviews/Create.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/RespondentReviews/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzcG9uZGVudFJldmlld3MvQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/RespondentReviews/Details.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/RespondentReviews/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzcG9uZGVudFJldmlld3MvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Reviews/CompleteManager.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Reviews/CompleteManager.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV2aWV3cy9Db21wbGV0ZU1hbmFnZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Reviews/CompleteManagerReview.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Reviews/CompleteManagerReview.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV2aWV3cy9Db21wbGV0ZU1hbmFnZXJSZXZpZXcuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Reviews/Create.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Reviews/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV2aWV3cy9DcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Reviews/Details.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Reviews/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV2aWV3cy9EZXRhaWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Reviews/PendingManagerReviews.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Reviews/PendingManagerReviews.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV2aWV3cy9QZW5kaW5nTWFuYWdlclJldmlld3MuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Shared/Components/QuestionOptions/Default.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Shared/Components/QuestionOptions/Default.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0NvbXBvbmVudHMvUXVlc3Rpb25PcHRpb25zL0RlZmF1bHQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Shared/_Alert.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Shared/_Alert.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19BbGVydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Shared/_Layout.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Shared/_NotificationPartial.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Shared/_NotificationPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19Ob3RpZmljYXRpb25QYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Users/Details.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Users/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlcnMvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Users/Managers.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Users/Managers.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlcnMvTWFuYWdlcnMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Users/Profile.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Users/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlcnMvUHJvZmlsZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/Users/Subordinates.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/Users/Subordinates.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlcnMvU3Vib3JkaW5hdGVzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/Views/_ViewStart.cshtml]
+[/home/hovard/Dev/python/System-Performance-Review/Front/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
