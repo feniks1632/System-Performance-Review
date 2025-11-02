@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace PerformanceReviewWeb.Models
 {
+    
     public class GoalStepCreateModel
     {
         [Required(ErrorMessage = "Название подпункта обязательно")]

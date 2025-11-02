@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Aop7JGjuTkqWDHPl36ajaViAID52GXg9aBbt4A+K4RNEeMhFaialYeXJetIc2ihNXfQcjXPGuFw8/r2/B9CuaQ==",
+  "dgSpecHash": "6h6Ni/Yi/dpwQpzRdN2ek/IWRhi0q+G5uYKmwgR5am72fGbn6DaZAFoBx1XPntEVnrZszdOQsk8b4jXp0QKSlQ==",
   "success": true,
-  "projectFilePath": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review-Front-v2/System-Performance-Review-Front-v2.csproj",
+  "projectFilePath": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/System-Performance-Review-Front-v2.csproj",
   "expectedPackageFiles": [
     "/home/oleg/.nuget/packages/microsoft.aspnetcore.authentication.abstractions/2.3.0/microsoft.aspnetcore.authentication.abstractions.2.3.0.nupkg.sha512",
     "/home/oleg/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/8.0.0/microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",

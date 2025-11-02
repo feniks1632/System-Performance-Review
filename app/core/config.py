@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = Field(
-        default="postgresql://review_user:review_password@localhost:5432/performance_review",
+        default="postgresql://postgres:pos234@localhost:5432/performance_review",
         description="PostgreSQL connection string",
     )
 

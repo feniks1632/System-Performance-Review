@@ -1,11 +1,11 @@
 {
   "Files": [
     {
-      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review-Front-v2/wwwroot/css/site.css",
+      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/wwwroot/css/site.css",
       "PackagePath": "staticwebassets/css/site.css"
     },
     {
-      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review-Front-v2/wwwroot/js/site.js",
+      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review/Front/wwwroot/js/site.js",
       "PackagePath": "staticwebassets/js/site.js"
     },
     {

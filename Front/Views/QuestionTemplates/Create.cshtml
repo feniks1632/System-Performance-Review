@@ -1,5 +1,3 @@
-@using PerformanceReviewWeb.Models
-@model QuestionTemplateCreateModel
 @{
     ViewData["Title"] = "Создание шаблона вопроса";
 }
@@ -14,77 +12,103 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <!-- Показываем сообщения об ошибках -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <h6>Ошибки валидации:</h6>
+                            <ul>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <form method="post" action="/question-templates/create" id="createForm">
+                        @Html.AntiForgeryToken()
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="QuestionText"></label>
-                                    <textarea asp-for="QuestionText" class="form-control" rows="3" 
-                                              placeholder="Введите текст вопроса..."></textarea>
-                                    <span asp-validation-for="QuestionText" class="text-danger"></span>
+                                    <label class="form-label" for="QuestionText">Текст вопроса</label>
+                                    <textarea name="QuestionText" id="QuestionText" class="form-control" rows="3" 
+                                              placeholder="Введите текст вопроса..." required>@Model?.QuestionText</textarea>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="QuestionText" data-valmsg-replace="true"></span>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="QuestionType"></label>
-                                    <select asp-for="QuestionType" class="form-select">
+                                    <label class="form-label" for="QuestionType">Тип вопроса</label>
+                                    <select name="QuestionType" id="QuestionType" class="form-select" required>
                                         <option value="">Выберите тип вопроса</option>
-                                        <option value="self">Самооценка</option>
-                                        <option value="manager">Оценка руководителя</option>
-                                        <option value="potential">Оценка потенциала</option>
-                                        <option value="respondent">Оценка респондента</option>
+                                        <option value="self" selected="@(Model?.QuestionType == "self")">Самооценка</option>
+                                        <option value="manager" selected="@(Model?.QuestionType == "manager")">Оценка руководителя</option>
+                                        <option value="potential" selected="@(Model?.QuestionType == "potential")">Оценка потенциала</option>
+                                        <option value="respondent" selected="@(Model?.QuestionType == "respondent")">Оценка респондента</option>
                                     </select>
-                                    <span asp-validation-for="QuestionType" class="text-danger"></span>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="QuestionType" data-valmsg-replace="true"></span>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="Section"></label>
-                                    <input asp-for="Section" class="form-control" 
-                                           placeholder="Например: Компетенции, Навыки...">
-                                    <span asp-validation-for="Section" class="text-danger"></span>
+                                    <label class="form-label" for="Section">Раздел</label>
+                                    <input name="Section" id="Section" class="form-control" 
+                                           placeholder="Например: Компетенции, Навыки..." 
+                                           value="@Model?.Section" required>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="Section" data-valmsg-replace="true"></span>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="Weight"></label>
-                                    <input asp-for="Weight" class="form-control" type="number" step="0.1" min="0.1" max="10.0">
-                                    <span asp-validation-for="Weight" class="text-danger"></span>
+                                    <label class="form-label" for="Weight">Вес вопроса</label>
+                                    <input name="Weight" id="Weight" class="form-control" type="number" step="0.1" min="0.1" max="10.0" 
+                                           value="@(Model?.Weight.ToString() ?? "1.0")" required>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="Weight" data-valmsg-replace="true"></span>
                                     <small class="text-muted">Вес вопроса в общей оценке (от 0.1 до 10.0)</small>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="MaxScore"></label>
-                                    <input asp-for="MaxScore" class="form-control" type="number" min="1" max="100">
-                                    <span asp-validation-for="MaxScore" class="text-danger"></span>
+                                    <label class="form-label" for="MaxScore">Максимальный балл</label>
+                                    <input name="MaxScore" id="MaxScore" class="form-control" type="number" min="1" max="100" 
+                                           value="@(Model?.MaxScore.ToString() ?? "5")" required>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="MaxScore" data-valmsg-replace="true"></span>
                                     <small class="text-muted">Максимальный балл за вопрос</small>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="OrderIndex"></label>
-                                    <input asp-for="OrderIndex" class="form-control" type="number" min="0">
-                                    <span asp-validation-for="OrderIndex" class="text-danger"></span>
+                                    <label class="form-label" for="OrderIndex">Порядковый номер</label>
+                                    <input name="OrderIndex" id="OrderIndex" class="form-control" type="number" min="0" 
+                                           value="@(Model?.OrderIndex.ToString() ?? "0")" required>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="OrderIndex" data-valmsg-replace="true"></span>
                                     <small class="text-muted">Порядковый номер в списке вопросов</small>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="TriggerWords"></label>
-                                    <input asp-for="TriggerWords" class="form-control" 
-                                           placeholder="слово1, слово2, слово3...">
-                                    <span asp-validation-for="TriggerWords" class="text-danger"></span>
+                                    <label class="form-label" for="TriggerWords">Триггерные слова</label>
+                                    <input name="TriggerWords" id="TriggerWords" class="form-control" 
+                                           placeholder="слово1, слово2, слово3..."
+                                           value="@Model?.TriggerWords">
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="TriggerWords" data-valmsg-replace="true"></span>
                                     <small class="text-muted">Триггерные слова для анализа ответов (через запятую)</small>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label" asp-for="OptionsJson"></label>
-                                    <textarea asp-for="OptionsJson" class="form-control" rows="4" 
-                                              placeholder='[{"id": "1", "text": "Вариант 1", "value": 1}, {"id": "2", "text": "Вариант 2", "value": 2}]'></textarea>
-                                    <span asp-validation-for="OptionsJson" class="text-danger"></span>
+                                    <label class="form-label" for="OptionsJson">Опции JSON</label>
+                                    <textarea name="OptionsJson" id="OptionsJson" class="form-control" rows="4" 
+                                              placeholder='[{"id": "1", "text": "Вариант 1", "value": 1}, {"id": "2", "text": "Вариант 2", "value": 2}]'>@Model?.OptionsJson</textarea>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="OptionsJson" data-valmsg-replace="true"></span>
                                     <small class="text-muted">JSON массив опций для вопросов с выбором</small>
+                                    <button type="button" class="btn btn-sm btn-outline-info mt-1" id="insertExample">
+                                        <i class="fas fa-magic me-1"></i>Вставить пример опций
+                                    </button>
                                 </div>
 
                                 <div class="mb-3 form-check">
-                                    <input asp-for="RequiresManagerScoring" class="form-check-input">
-                                    <label class="form-check-label" asp-for="RequiresManagerScoring"></label>
+                                    <input type="checkbox" name="RequiresManagerScoring" id="RequiresManagerScoring" class="form-check-input" 
+                                           value="true" @(Model?.RequiresManagerScoring == true ? "checked" : "")>
+                                    <input type="hidden" name="RequiresManagerScoring" value="false">
+                                    <label class="form-check-label" for="RequiresManagerScoring">Требует оценки руководителя</label>
                                     <small class="text-muted d-block">Если включено, вопрос потребует дополнительной оценки руководителя</small>
                                 </div>
                             </div>
@@ -104,7 +128,7 @@
                             <a href="/question-templates" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-1"></i>Назад к списку
                             </a>
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn btn-success" id="submitBtn">
                                 <i class="fas fa-save me-1"></i>Создать шаблон
                             </button>
                         </div>
@@ -116,10 +140,26 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== DEBUG: Form loaded ===');
+            
+            const form = document.getElementById('createForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const insertExampleBtn = document.getElementById('insertExample');
+            const optionsTextarea = document.getElementById('OptionsJson');
+            
+            if (!form) {
+                console.error('Form not found!');
+                return;
+            }
+            
+            console.log('Form found:', form);
+
             // Пример валидного JSON для опций
             const exampleOptions = [
                 {
@@ -149,31 +189,110 @@
                 }
             ];
 
-            // Кнопка для вставки примера JSON
-            const optionsTextarea = document.getElementById('OptionsJson');
-            const exampleButton = document.createElement('button');
-            exampleButton.type = 'button';
-            exampleButton.className = 'btn btn-sm btn-outline-info mt-1';
-            exampleButton.innerHTML = '<i class="fas fa-magic me-1"></i>Вставить пример опций';
-            exampleButton.addEventListener('click', function() {
-                optionsTextarea.value = JSON.stringify(exampleOptions, null, 2);
-            });
-            
-            optionsTextarea.parentNode.appendChild(exampleButton);
+            // Вставка примера JSON
+            if (insertExampleBtn && optionsTextarea) {
+                insertExampleBtn.addEventListener('click', function() {
+                    console.log('Inserting example JSON');
+                    optionsTextarea.value = JSON.stringify(exampleOptions, null, 2);
+                    optionsTextarea.classList.remove('is-invalid');
+                    optionsTextarea.classList.add('is-valid');
+                });
+            }
 
             // Валидация JSON при вводе
-            optionsTextarea.addEventListener('blur', function() {
-                if (this.value.trim()) {
-                    try {
-                        JSON.parse(this.value);
-                        this.classList.remove('is-invalid');
-                        this.classList.add('is-valid');
-                    } catch (e) {
-                        this.classList.remove('is-valid');
-                        this.classList.add('is-invalid');
+            if (optionsTextarea) {
+                optionsTextarea.addEventListener('blur', function() {
+                    if (this.value.trim()) {
+                        try {
+                            JSON.parse(this.value);
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                        } catch (e) {
+                            this.classList.remove('is-valid');
+                            this.classList.add('is-invalid');
+                            console.error('Invalid JSON:', e.message);
+                        }
                     }
+                });
+            }
+
+            // Обработчик отправки формы
+            form.addEventListener('submit', function(e) {
+                console.log('=== FORM SUBMIT STARTED ===');
+                
+                // Логируем все данные формы
+                const formData = new FormData(form);
+                console.log('Form data:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`  ${key}: '${value}'`);
                 }
+
+                // Проверяем валидность формы
+                if (!form.checkValidity()) {
+                    console.log('Form validation failed');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Показываем все ошибки валидации
+                    const invalidFields = form.querySelectorAll(':invalid');
+                    console.log('Invalid fields:', invalidFields.length);
+                    invalidFields.forEach(field => {
+                        console.log(`Invalid field: ${field.name}`);
+                    });
+                } else {
+                    console.log('Form validation passed, submitting...');
+                    // Блокируем кнопку отправки
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Создание...';
+                    
+                    // Добавляем небольшую задержку для отладки
+                    setTimeout(() => {
+                        console.log('Form submission proceeding...');
+                    }, 100);
+                }
+                
+                form.classList.add('was-validated');
             });
+
+            // Обработчик клика на кнопку
+            submitBtn.addEventListener('click', function(e) {
+                console.log('Submit button clicked');
+            });
+
+            // Логируем изменения в полях формы для отладки
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    console.log(`Field ${this.name} changed:`, this.value);
+                });
+                
+                input.addEventListener('input', function() {
+                    // Сбрасываем состояние валидации при изменении
+                    if (this.classList.contains('is-invalid')) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            });
+
+            // Предзаполняем некоторые поля для тестирования
+            console.log('=== DEBUG: Form initialization complete ===');
         });
+
+        // Глобальная функция для отладки (можно вызвать из консоли браузера)
+        window.debugForm = function() {
+            const form = document.getElementById('createForm');
+            if (form) {
+                const data = new FormData(form);
+                console.log('=== FORM DEBUG INFO ===');
+                console.log('Form action:', form.action);
+                console.log('Form method:', form.method);
+                console.log('Form data:');
+                for (let [key, value] of data.entries()) {
+                    console.log(`  ${key}: '${value}'`);
+                }
+                console.log('Form valid:', form.checkValidity());
+                console.log('=====================');
+            }
+        };
     </script>
 }

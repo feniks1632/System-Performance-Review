@@ -1,8 +1,7 @@
 // Models/ReviewModels.cs
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
+using PerformanceReviewWeb.Models;
 using System.Text.Json.Serialization;
-using PerformanceReviewWeb.Services;
 
 namespace PerformanceReviewWeb.Models
 {
@@ -145,7 +144,6 @@ namespace PerformanceReviewWeb.Models
         public DateTime CreatedAt { get; set; }
     }
 
-    // ДОБАВЬТЕ ЭТОТ КЛАСС
     public class RespondentReviewViewModel
     {
         public string GoalId { get; set; } = string.Empty;
@@ -154,7 +152,6 @@ namespace PerformanceReviewWeb.Models
         public RespondentReviewCreateModel Review { get; set; } = new RespondentReviewCreateModel();
     }
 
-    // ДОБАВЬТЕ ЭТОТ КЛАСС (если используется в ReviewsController)
     public class ReviewCreateViewModel
     {
         public string GoalId { get; set; } = string.Empty;
@@ -162,138 +159,6 @@ namespace PerformanceReviewWeb.Models
         public ReviewType ReviewType { get; set; }
         public List<QuestionTemplateResponse> Questions { get; set; } = new List<QuestionTemplateResponse>();
         public ReviewCreateModel Review { get; set; } = new ReviewCreateModel();
-    }
-
-    public class QuestionTemplateResponse
-    {
-        public string Id { get; set; } = string.Empty;
-        public string QuestionText { get; set; } = string.Empty;
-        public string QuestionType { get; set; } = string.Empty;
-        public string? Section { get; set; }
-        public double Weight { get; set; } = 1.0;
-        public int MaxScore { get; set; } = 5;
-        public int OrderIndex { get; set; }
-        public string? TriggerWords { get; set; }
-        public string? OptionsJson { get; set; }
-        public bool RequiresManagerScoring { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-
-        // ИСПРАВЛЕННАЯ логика десериализации
-        public List<QuestionOption>? Options
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(OptionsJson) || OptionsJson == "null")
-                    return null;
-
-                try
-                {
-                    var options = System.Text.Json.JsonSerializer.Deserialize<List<QuestionOption>>(
-                        OptionsJson,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-
-                    // ДЕБАГ: выводим в консоль для диагностики
-                    Console.WriteLine($"[QuestionTemplate] Question: {QuestionText}");
-                    Console.WriteLine($"[QuestionTemplate] Type: {QuestionType}");
-                    Console.WriteLine($"[QuestionTemplate] OptionsJson: {OptionsJson}");
-                    Console.WriteLine($"[QuestionTemplate] Deserialized options count: {options?.Count ?? 0}");
-
-                    return options;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[QuestionTemplate] Error deserializing options for '{QuestionText}': {ex.Message}");
-                    Console.WriteLine($"[QuestionTemplate] OptionsJson: {OptionsJson}");
-                    return null;
-                }
-            }
-        }
-    }
-
-    public class QuestionTemplateCreateModel
-    {
-        [Required(ErrorMessage = "Текст вопроса обязателен")]
-        [Display(Name = "Текст вопроса")]
-        public string QuestionText { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Тип вопроса обязателен")]
-        [Display(Name = "Тип вопроса")]
-        public string QuestionType { get; set; } = string.Empty;
-
-        [Display(Name = "Раздел")]
-        public string? Section { get; set; }
-
-        [Required(ErrorMessage = "Вес вопроса обязателен")]
-        [Range(0.1, 10.0, ErrorMessage = "Вес должен быть от 0.1 до 10.0")]
-        [Display(Name = "Вес вопроса")]
-        public double Weight { get; set; } = 1.0;
-
-        [Required(ErrorMessage = "Максимальный балл обязателен")]
-        [Range(1, 100, ErrorMessage = "Максимальный балл должен быть от 1 до 100")]
-        [Display(Name = "Максимальный балл")]
-        public int MaxScore { get; set; } = 5;
-
-        [Required(ErrorMessage = "Порядковый номер обязателен")]
-        [Display(Name = "Порядковый номер")]
-        public int OrderIndex { get; set; }
-
-        [Display(Name = "Триггерные слова (через запятую)")]
-        public string? TriggerWords { get; set; }
-
-        [Display(Name = "Опции (JSON)")]
-        public string? OptionsJson { get; set; }
-
-        [Display(Name = "Требует оценки руководителя")]
-        public bool RequiresManagerScoring { get; set; }
-    }
-
-    public class QuestionTemplateEditModel
-    {
-        [Required(ErrorMessage = "Текст вопроса обязателен")]
-        [Display(Name = "Текст вопроса")]
-        public string QuestionText { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Тип вопроса обязателен")]
-        [Display(Name = "Тип вопроса")]
-        public string QuestionType { get; set; } = string.Empty;
-
-        [Display(Name = "Раздел")]
-        public string? Section { get; set; }
-
-        [Required(ErrorMessage = "Вес вопроса обязателен")]
-        [Range(0.1, 10.0, ErrorMessage = "Вес должен быть от 0.1 до 10.0")]
-        [Display(Name = "Вес вопроса")]
-        public double Weight { get; set; } = 1.0;
-
-        [Required(ErrorMessage = "Максимальный балл обязателен")]
-        [Range(1, 100, ErrorMessage = "Максимальный балл должен быть от 1 до 100")]
-        [Display(Name = "Максимальный балл")]
-        public int MaxScore { get; set; } = 5;
-
-        [Required(ErrorMessage = "Порядковый номер обязателен")]
-        [Display(Name = "Порядковый номер")]
-        public int OrderIndex { get; set; }
-
-        [Display(Name = "Триггерные слова (через запятую)")]
-        public string? TriggerWords { get; set; }
-
-        [Display(Name = "Опции (JSON)")]
-        public string? OptionsJson { get; set; }
-
-        [Display(Name = "Требует оценки руководителя")]
-        public bool RequiresManagerScoring { get; set; }
-    }
-
-    public class QuestionOption
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-        public double Value { get; set; }
-        public int OrderIndex { get; set; }
     }
 
     public class ManagerScoringViewModel

@@ -4,9 +4,8 @@ using PerformanceReviewWeb.Services;
 
 namespace PerformanceReviewWeb.Controllers
 {
-    [ApiController]
     [Route("question-templates")]
-    public class QuestionTemplatesController : ControllerBase
+    public class QuestionTemplatesController : Controller
     {
         private readonly IReviewService _reviewService;
         private readonly IAuthService _authService;
@@ -20,183 +19,216 @@ namespace PerformanceReviewWeb.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<QuestionTemplateResponse>>> GetQuestionTemplates(
-            [FromQuery] string? question_type = null,
-            [FromQuery] string? section = null)
+        public async Task<IActionResult> Index(string? question_type = null, string? section = null)
         {
             if (!_authService.IsAuthenticated())
-                return Unauthorized();
+                return RedirectToAction("Login", "Auth");
 
             var currentUser = _authService.GetCurrentUser();
             if (currentUser?.IsManager != true)
                 return Forbid();
 
             var templates = await _reviewService.GetQuestionTemplatesAsync(question_type, section);
-            return Ok(templates ?? new List<QuestionTemplateResponse>());
+            
+            ViewBag.QuestionType = question_type;
+            ViewBag.Section = section;
+            
+            return View(templates ?? new List<QuestionTemplateResponse>());
         }
 
-        [HttpGet("{template_id}")]
-        public async Task<ActionResult<QuestionTemplateResponse>> GetQuestionTemplateById(string template_id)
+        [HttpGet("details/{template_id}")]
+        public async Task<IActionResult> Details(string template_id)
         {
             if (!_authService.IsAuthenticated())
-                return Unauthorized();
+                return RedirectToAction("Login", "Auth");
 
             var currentUser = _authService.GetCurrentUser();
             if (currentUser?.IsManager != true)
                 return Forbid();
 
             if (string.IsNullOrWhiteSpace(template_id))
-                return BadRequest(new { message = "Template ID is required" });
+                return BadRequest("Template ID is required");
 
             var template = await _apiService.GetAsync<QuestionTemplateResponse>($"question-templates/{template_id}");
             if (template == null)
                 return NotFound();
 
-            return Ok(template);
+            return View(template);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<QuestionTemplateResponse>> CreateQuestionTemplate(QuestionTemplateCreateRequest createRequest)
+        [HttpGet("create")]
+        public IActionResult Create()
         {
             if (!_authService.IsAuthenticated())
-                return Unauthorized();
+                return RedirectToAction("Login", "Auth");
 
             var currentUser = _authService.GetCurrentUser();
             if (currentUser?.IsManager != true)
                 return Forbid();
 
-            if (createRequest == null)
-                return BadRequest(new { message = "Request body is required" });
+            var model = new QuestionTemplateCreateModel(); // Используем модель для представления
+            return View(model);
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> Create(QuestionTemplateCreateModel createModel) // Изменен тип параметра
+        {
+            if (!_authService.IsAuthenticated())
+                return RedirectToAction("Login", "Auth");
+
+            var currentUser = _authService.GetCurrentUser();
+            if (currentUser?.IsManager != true)
+                return Forbid();
+
+            if (createModel == null)
+            {
+                ModelState.AddModelError("", "Request body is required");
+                return View(createModel);
+            }
 
             if (!ModelState.IsValid)
             {
-                var errors = ModelState
-                    .Where(x => x.Value != null && x.Value.Errors != null && x.Value.Errors.Count > 0)
-                    .Select(x => new ValidationErrorDetail
-                    {
-                        Loc = new[] { x.Key },
-                        Msg = string.Join(", ", x.Value!.Errors
-                            .Where(e => !string.IsNullOrEmpty(e.ErrorMessage))
-                            .Select(e => e.ErrorMessage!)),
-                        Type = "value_error"
-                    })
-                    .ToArray();
-
-                return BadRequest(new ValidationErrorResponse
-                {
-                    Detail = errors
-                });
+                return View(createModel);
             }
 
-            var template = await _apiService.PostAsync<QuestionTemplateResponse>("question-templates", createRequest);
+            // Преобразуем модель представления в модель запроса API
+            var createRequest = new QuestionTemplateCreateRequest
+            {
+                QuestionText = createModel.QuestionText,
+                QuestionType = createModel.QuestionType,
+                Section = createModel.Section,
+                Weight = createModel.Weight,
+                MaxScore = createModel.MaxScore,
+                OrderIndex = createModel.OrderIndex,
+                TriggerWords = createModel.TriggerWords,
+                OptionsJson = createModel.OptionsJson,
+                RequiresManagerScoring = createModel.RequiresManagerScoring
+            };
+
+            Console.WriteLine("=== DEBUG: Create POST method called ===");
+    Console.WriteLine($"Model is null: {createModel == null}");
+
+            if (createModel != null)
+            {
+                Console.WriteLine($"QuestionText: '{createModel.QuestionText}'");
+                Console.WriteLine($"QuestionType: '{createModel.QuestionType}'");
+                Console.WriteLine($"Section: '{createModel.Section}'");
+                Console.WriteLine($"Weight: {createModel.Weight}");
+                Console.WriteLine($"MaxScore: {createModel.MaxScore}");
+                Console.WriteLine($"OrderIndex: {createModel.OrderIndex}");
+                Console.WriteLine($"TriggerWords: '{createModel.TriggerWords}'");
+                Console.WriteLine($"OptionsJson: '{createModel.OptionsJson}'");
+                Console.WriteLine($"RequiresManagerScoring: {createModel.RequiresManagerScoring}");
+            }
+
+            var template = await _apiService.PostAsync<QuestionTemplateResponse>("question-templates/", createRequest);
             if (template != null)
             {
-                return Ok(template);
+                TempData["SuccessMessage"] = "Шаблон вопроса успешно создан";
+                return RedirectToAction("Index");
             }
 
-            return BadRequest(new { message = "Ошибка при создании шаблона вопроса" });
+            ModelState.AddModelError("", "Ошибка при создании шаблона вопроса");
+            return View(createModel);
         }
 
-        [HttpPut("{template_id}")]
-        public async Task<ActionResult<QuestionTemplateResponse>> UpdateQuestionTemplate(string template_id, QuestionTemplateUpdateRequest updateRequest)
+        [HttpGet("edit/{template_id}")]
+        public async Task<IActionResult> Edit(string template_id)
         {
             if (!_authService.IsAuthenticated())
-                return Unauthorized();
+                return RedirectToAction("Login", "Auth");
 
             var currentUser = _authService.GetCurrentUser();
             if (currentUser?.IsManager != true)
                 return Forbid();
 
             if (string.IsNullOrWhiteSpace(template_id))
-                return BadRequest(new { message = "Template ID is required" });
+                return BadRequest("Template ID is required");
 
-            if (updateRequest == null)
-                return BadRequest(new { message = "Request body is required" });
+            var template = await _apiService.GetAsync<QuestionTemplateResponse>($"question-templates/{template_id}");
+            if (template == null)
+                return NotFound();
+
+            var editModel = new QuestionTemplateEditModel
+            {
+                Id = template.Id,
+                QuestionText = template.QuestionText ?? string.Empty,
+                QuestionType = template.QuestionType ?? string.Empty,
+                Section = template.Section ?? string.Empty,
+                Weight = (decimal)template.Weight, // явное преобразование double to decimal
+                MaxScore = template.MaxScore,
+                OrderIndex = template.OrderIndex,
+                TriggerWords = template.TriggerWords ?? string.Empty,
+                OptionsJson = template.OptionsJson ?? string.Empty,
+                RequiresManagerScoring = template.RequiresManagerScoring
+            };
+
+            return View(editModel);
+        }
+
+        [HttpPost("edit/{template_id}")]
+        public async Task<IActionResult> Edit(string template_id, QuestionTemplateEditModel editModel)
+        {
+            if (!_authService.IsAuthenticated())
+                return RedirectToAction("Login", "Auth");
+
+            var currentUser = _authService.GetCurrentUser();
+            if (currentUser?.IsManager != true)
+                return Forbid();
+
+            if (string.IsNullOrWhiteSpace(template_id))
+                return BadRequest("Template ID is required");
 
             if (!ModelState.IsValid)
             {
-                var errors = ModelState
-                    .Where(x => x.Value != null && x.Value.Errors != null && x.Value.Errors.Count > 0)
-                    .Select(x => new ValidationErrorDetail
-                    {
-                        Loc = new[] { x.Key },
-                        Msg = string.Join(", ", x.Value!.Errors
-                            .Where(e => !string.IsNullOrEmpty(e.ErrorMessage))
-                            .Select(e => e.ErrorMessage!)),
-                        Type = "value_error"
-                    })
-                    .ToArray();
-
-                return BadRequest(new ValidationErrorResponse
-                {
-                    Detail = errors
-                });
+                return View(editModel);
             }
+
+            var updateRequest = new QuestionTemplateUpdateRequest
+            {
+                QuestionText = editModel.QuestionText,
+                QuestionType = editModel.QuestionType,
+                Section = editModel.Section,
+                Weight = editModel.Weight, // преобразование decimal to double для API
+                MaxScore = editModel.MaxScore,
+                OrderIndex = editModel.OrderIndex,
+                TriggerWords = editModel.TriggerWords,
+                OptionsJson = editModel.OptionsJson,
+                RequiresManagerScoring = editModel.RequiresManagerScoring
+            };
 
             var template = await _apiService.PutAsync<QuestionTemplateResponse>($"question-templates/{template_id}", updateRequest);
             if (template != null)
             {
-                return Ok(template);
+                TempData["SuccessMessage"] = "Шаблон вопроса успешно обновлен";
+                return RedirectToAction("Index");
             }
 
-            return BadRequest(new { message = "Ошибка при обновлении шаблона вопроса" });
+            ModelState.AddModelError("", "Ошибка при обновлении шаблона вопроса");
+            return View(editModel);
         }
 
-        [HttpDelete("{template_id}")]
-        public async Task<ActionResult<StatusResponse>> DeleteQuestionTemplate(string template_id)
+        [HttpPost("delete/{template_id}")]
+        public async Task<IActionResult> Delete(string template_id)
         {
             if (!_authService.IsAuthenticated())
-                return Unauthorized();
+                return Json(new { success = false, message = "Unauthorized" });
 
             var currentUser = _authService.GetCurrentUser();
             if (currentUser?.IsManager != true)
-                return Forbid();
+                return Json(new { success = false, message = "Forbidden" });
 
             if (string.IsNullOrWhiteSpace(template_id))
-                return BadRequest(new { message = "Template ID is required" });
+                return Json(new { success = false, message = "Template ID is required" });
 
             var result = await _apiService.DeleteAsync($"question-templates/{template_id}");
 
             if (result)
             {
-                return Ok(new StatusResponse
-                {
-                    Status = "success",
-                    Message = "Шаблон вопроса успешно удален"
-                });
+                return Json(new { success = true, message = "Шаблон вопроса успешно удален" });
             }
 
-            return BadRequest(new StatusResponse
-            {
-                Status = "error",
-                Message = "Ошибка при удалении шаблона вопроса"
-            });
+            return Json(new { success = false, message = "Ошибка при удалении шаблона вопроса" });
         }
-    }
-
-    public class QuestionTemplateUpdateRequest
-    {
-        public string QuestionText { get; set; } = string.Empty;
-        public string QuestionType { get; set; } = string.Empty;
-        public string Section { get; set; } = string.Empty;
-        public decimal Weight { get; set; }
-        public int MaxScore { get; set; }
-        public int OrderIndex { get; set; }
-        public string? TriggerWords { get; set; }
-        public string? OptionsJson { get; set; }
-        public bool RequiresManagerScoring { get; set; }
-    }
-
-    public class QuestionTemplateCreateRequest
-    {
-        public string QuestionText { get; set; } = string.Empty;
-        public string QuestionType { get; set; } = string.Empty;
-        public string Section { get; set; } = string.Empty;
-        public decimal Weight { get; set; }
-        public int MaxScore { get; set; }
-        public int OrderIndex { get; set; }
-        public string? TriggerWords { get; set; }
-        public string? OptionsJson { get; set; }
-        public bool RequiresManagerScoring { get; set; }
     }
 }
