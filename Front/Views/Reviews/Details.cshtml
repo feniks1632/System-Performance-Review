@@ -1,0 +1,274 @@
+@using PerformanceReviewWeb.Models
+@model ReviewResponseWithAnswers
+@{
+    ViewData["Title"] = "Детали оценки";
+    var reviewTypeText = Model.ReviewType.ToString() switch
+    {
+        "Self" => "Самооценка",
+        "Manager" => "Оценка руководителя", 
+        "Potential" => "Оценка потенциала",
+        "Respondent" => "Оценка респондента",
+        _ => "Оценка"
+    };
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-clipboard-check me-2"></i>@reviewTypeText
+                        </h4>
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.FinalRating))
+                            {
+                                <span class="badge bg-success fs-6">Завершено: @Model.FinalRating</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning fs-6">Ожидает завершения</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Общая информация -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Информация об оценке</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>ID оценки:</strong></td>
+                                    <td>@Model.Id</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ID цели:</strong></td>
+                                    <td>@Model.GoalId</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Тип оценки:</strong></td>
+                                    <td>@reviewTypeText</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Дата создания:</strong></td>
+                                    <td>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Результаты</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Рассчитанный балл:</strong></td>
+                                    <td>
+                                        @if (Model.CalculatedScore.HasValue)
+                                        {
+                                            <span class="badge bg-info fs-6">@Model.CalculatedScore.Value.ToString("F1")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Не рассчитан</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Итоговый рейтинг:</strong></td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.FinalRating))
+                                        {
+                                            <span class="badge rating-@Model.FinalRating fs-6">@Model.FinalRating</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Не установлен</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Итоговая обратная связь (если есть) -->
+                    @if (!string.IsNullOrEmpty(Model.FinalFeedback))
+                    {
+                        <div class="card mb-4 border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-comment me-2"></i>Итоговая обратная связь руководителя</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">@Model.FinalFeedback</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Ответы на вопросы -->
+                    <h5 class="mb-3">Ответы на вопросы</h5>
+                    
+                    <!-- Самооценка -->
+                    @if (Model.SelfEvaluationAnswers?.Any() == true)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-user me-2"></i>Самооценка</h6>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var answer in Model.SelfEvaluationAnswers)
+                                {
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@(answer.ContainsKey("question_text") ? answer["question_text"] : "Вопрос")</h6>
+                                            <div class="row">
+                                                @if (answer.ContainsKey("answer") && !string.IsNullOrEmpty(answer["answer"]?.ToString()))
+                                                {
+                                                    <div class="col-12 mb-2">
+                                                        <strong>Ответ:</strong> 
+                                                        <p class="mb-0">@answer["answer"]</p>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("score") && answer["score"] != null)
+                                                {
+                                                    <div class="col-md-4">
+                                                        <strong>Оценка:</strong> 
+                                                        <span class="badge bg-primary">@answer["score"]</span>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("selected_option") && !string.IsNullOrEmpty(answer["selected_option"]?.ToString()))
+                                                {
+                                                    <div class="col-md-8">
+                                                        <strong>Выбранные опции:</strong> 
+                                                        <span class="badge bg-secondary">@answer["selected_option"]</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Оценка руководителя -->
+                    @if (Model.ManagerEvaluationAnswers?.Any() == true)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>Оценка руководителя</h6>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var answer in Model.ManagerEvaluationAnswers)
+                                {
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@(answer.ContainsKey("question_text") ? answer["question_text"] : "Вопрос")</h6>
+                                            <div class="row">
+                                                @if (answer.ContainsKey("answer") && !string.IsNullOrEmpty(answer["answer"]?.ToString()))
+                                                {
+                                                    <div class="col-12 mb-2">
+                                                        <strong>Ответ:</strong> 
+                                                        <p class="mb-0">@answer["answer"]</p>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("score") && answer["score"] != null)
+                                                {
+                                                    <div class="col-md-4">
+                                                        <strong>Оценка:</strong> 
+                                                        <span class="badge bg-primary">@answer["score"]</span>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("selected_option") && !string.IsNullOrEmpty(answer["selected_option"]?.ToString()))
+                                                {
+                                                    <div class="col-md-8">
+                                                        <strong>Выбранные опции:</strong> 
+                                                        <span class="badge bg-secondary">@answer["selected_option"]</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Оценка потенциала -->
+                    @if (Model.PotentialEvaluationAnswers?.Any() == true)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-purple text-white">
+                                <h6 class="mb-0"><i class="fas fa-rocket me-2"></i>Оценка потенциала</h6>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var answer in Model.PotentialEvaluationAnswers)
+                                {
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@(answer.ContainsKey("question_text") ? answer["question_text"] : "Вопрос")</h6>
+                                            <div class="row">
+                                                @if (answer.ContainsKey("answer") && !string.IsNullOrEmpty(answer["answer"]?.ToString()))
+                                                {
+                                                    <div class="col-12 mb-2">
+                                                        <strong>Ответ:</strong> 
+                                                        <p class="mb-0">@answer["answer"]</p>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("score") && answer["score"] != null)
+                                                {
+                                                    <div class="col-md-4">
+                                                        <strong>Оценка:</strong> 
+                                                        <span class="badge bg-primary">@answer["score"]</span>
+                                                    </div>
+                                                }
+                                                @if (answer.ContainsKey("selected_option") && !string.IsNullOrEmpty(answer["selected_option"]?.ToString()))
+                                                {
+                                                    <div class="col-md-8">
+                                                        <strong>Выбранные опции:</strong> 
+                                                        <span class="badge bg-secondary">@answer["selected_option"]</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Действия -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/goals/@Model.GoalId" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Назад к цели
+                        </a>
+                        
+                        @if (ViewBag.User?.IsManager == true && string.IsNullOrEmpty(Model.FinalRating) && 
+                            (Model.ReviewType == ReviewType.Manager || Model.ReviewType == ReviewType.Potential))
+                        {
+                            <a href="/reviews/complete-manager/@Model.Id" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i>Завершить оценку
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rating-excellent { background-color: #28a745 !important; }
+        .rating-good { background-color: #20c997 !important; }
+        .rating-satisfactory { background-color: #ffc107 !important; color: #000 !important; }
+        .rating-poor { background-color: #fd7e14 !important; }
+        .rating-unsatisfactory { background-color: #dc3545 !important; }
+        
+        .bg-purple {
+            background-color: #6f42c1 !important;
+        }
+        
+        .card .card {
+            border: 1px solid #dee2e6;
+        }
+    </style>
+}

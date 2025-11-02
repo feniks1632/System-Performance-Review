@@ -1,0 +1,41 @@
+@model PerformanceReviewWeb.ViewComponents.QuestionOptionsViewModel
+
+@if (Model.Question.Options?.Any() == true)
+{
+    <div class="question-options">
+        @foreach (var option in Model.Question.Options.OrderBy(o => o.OrderIndex))
+        {
+            <div class="form-check mb-2">
+                <input class="form-check-input question-option" 
+                       type="checkbox" 
+                       value="@option.Id" 
+                       id="option_@Model.Question.Id@option.Id"
+                       @(Model.SelectedOptions.Contains(option.Id) ? "checked" : "")>
+                <label class="form-check-label" for="option_@Model.Question.Id@option.Id">
+                    @option.Text
+                </label>
+            </div>
+        }
+        <input type="hidden" class="selected-options" 
+               name="Answers[@Model.QuestionIndex].SelectedOption" 
+               value="@string.Join(",", Model.SelectedOptions)" />
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.question-options');
+            const checkboxes = container.querySelectorAll('.question-option');
+            const hiddenInput = container.querySelector('.selected-options');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const selectedValues = Array.from(checkboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value)
+                        .join(',');
+                    hiddenInput.value = selectedValues;
+                });
+            });
+        });
+    </script>
+}

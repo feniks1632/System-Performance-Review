@@ -1,0 +1,99 @@
+@using PerformanceReviewWeb.Models
+@model QuestionTemplateEditModel
+@{
+    ViewData["Title"] = "Редактирование шаблона вопроса";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Редактирование шаблона вопроса
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="QuestionText"></label>
+                                    <textarea asp-for="QuestionText" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="QuestionText" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="QuestionType"></label>
+                                    <select asp-for="QuestionType" class="form-select">
+                                        <option value="self">Самооценка</option>
+                                        <option value="manager">Оценка руководителя</option>
+                                        <option value="potential">Оценка потенциала</option>
+                                        <option value="respondent">Оценка респондента</option>
+                                    </select>
+                                    <span asp-validation-for="QuestionType" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="Section"></label>
+                                    <input asp-for="Section" class="form-control">
+                                    <span asp-validation-for="Section" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="Weight"></label>
+                                    <input asp-for="Weight" class="form-control" type="number" step="0.1" min="0.1" max="10.0">
+                                    <span asp-validation-for="Weight" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="MaxScore"></label>
+                                    <input asp-for="MaxScore" class="form-control" type="number" min="1" max="100">
+                                    <span asp-validation-for="MaxScore" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="OrderIndex"></label>
+                                    <input asp-for="OrderIndex" class="form-control" type="number" min="0">
+                                    <span asp-validation-for="OrderIndex" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="TriggerWords"></label>
+                                    <input asp-for="TriggerWords" class="form-control">
+                                    <span asp-validation-for="TriggerWords" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" asp-for="OptionsJson"></label>
+                                    <textarea asp-for="OptionsJson" class="form-control" rows="4"></textarea>
+                                    <span asp-validation-for="OptionsJson" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3 form-check">
+                                    <input asp-for="RequiresManagerScoring" class="form-check-input">
+                                    <label class="form-check-label" asp-for="RequiresManagerScoring"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/question-templates" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Вход в систему";
+}
+
+<div class="row justify-content-center min-vh-100 align-items-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="card-title mb-0 text-center">
+                    <i class="fas fa-sign-in-alt me-2"></i>Вход в систему
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/login" id="loginForm">
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" id="Email" name="Email" class="form-control" placeholder="Введите ваш email" required />
+                        </div>
+                        <span class="text-danger small email-error"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" id="Password" name="Password" class="form-control" placeholder="Введите ваш пароль" required />
+                        </div>
+                        <span class="text-danger small password-error"></span>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i>Войти
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="mb-0">Нет аккаунта? 
+                        <a href="/register" class="text-decoration-none">Зарегистрируйтесь</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Вход...';
+            btn.disabled = true;
+        });
+    </script>
+}

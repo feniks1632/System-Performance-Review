@@ -1,0 +1,35 @@
+@model List<PerformanceReviewWeb.Models.NotificationResponse>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var notification in Model.Take(5))
+    {
+        <li>
+            <a class="dropdown-item @(!notification.IsRead ? "fw-bold" : "")" 
+               href="@GetNotificationLink(notification)" 
+               data-notification-id="@notification.Id">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">@notification.Title</h6>
+                    <small>@notification.CreatedAt.ToString("HH:mm")</small>
+                </div>
+                <p class="mb-1">@notification.Message</p>
+            </a>
+        </li>
+    }
+}
+else
+{
+    <li><a class="dropdown-item text-center" href="#">Нет уведомлений</a></li>
+}
+
+@functions {
+    private string GetNotificationLink(PerformanceReviewWeb.Models.NotificationResponse notification)
+    {
+        return notification.RelatedEntityType?.ToLower() switch
+        {
+            "goal" => $"/goals/{notification.RelatedEntityId}",
+            "review" => $"/reviews/{notification.RelatedEntityId}",
+            _ => "/notifications"
+        };
+    }
+}

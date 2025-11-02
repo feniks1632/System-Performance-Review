@@ -1,0 +1,45 @@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show auto-hide" role="alert" data-delay="5000">
+        <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show auto-hide" role="alert" data-delay="7000">
+        <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Warning"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show auto-hide" role="alert" data-delay="6000">
+        <i class="fas fa-info-circle me-2"></i> @TempData["Info"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<script>
+    // Auto-hide success/warning/info alerts after delay
+    document.addEventListener('DOMContentLoaded', function() {
+        const autoHideAlerts = document.querySelectorAll('.alert.auto-hide');
+        autoHideAlerts.forEach(alert => {
+            const delay = alert.getAttribute('data-delay') || 5000;
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, delay);
+        });
+    });
+</script>

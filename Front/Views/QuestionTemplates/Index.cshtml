@@ -1,0 +1,181 @@
+@using PerformanceReviewWeb.Models
+<!-- Views/QuestionTemplates/Index.cshtml -->
+@model List<QuestionTemplateResponse>
+@{
+    ViewData["Title"] = "Шаблоны вопросов";
+    var questionType = ViewBag.QuestionType as string;
+    var currentSection = ViewBag.Section as string;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-question-circle me-2"></i>Шаблоны вопросов</h1>
+        <a href="/question-templates/create" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>Создать шаблон
+        </a>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Тип вопроса</label>
+                    <select name="questionType" class="form-select">
+                        <option value="">Все типы</option>
+                        <option value="self" selected="@(questionType == "self")">Самооценка</option>
+                        <option value="manager" selected="@(questionType == "manager")">Оценка руководителя</option>
+                        <option value="potential" selected="@(questionType == "potential")">Оценка потенциала</option>
+                        <option value="respondent" selected="@(questionType == "respondent")">Оценка респондента</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Раздел</label>
+                    <input type="text" name="section" class="form-control" value="@currentSection" placeholder="Введите раздел...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Список шаблонов вопросов</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Текст вопроса</th>
+                                <th>Тип</th>
+                                <th>Раздел</th>
+                                <th>Вес</th>
+                                <th>Макс. балл</th>
+                                <th>Порядок</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var template in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@template.QuestionText</strong>
+                                        @if (template.RequiresManagerScoring)
+                                        {
+                                            <span class="badge bg-warning ms-1" title="Требует оценки руководителя">Р</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@template.QuestionType</span>
+                                    </td>
+                                    <td>@(template.Section ?? "-")</td>
+                                    <td>
+                                        <span class="badge bg-primary">@template.Weight</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">@template.MaxScore</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@template.OrderIndex</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/question-templates/details/@template.Id" 
+                                               class="btn btn-outline-primary" title="Просмотреть">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/question-templates/edit/@template.Id" 
+                                               class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger delete-template" 
+                                                    data-id="@template.Id" 
+                                                    data-text="@template.QuestionText"
+                                                    title="Удалить">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h5>Шаблоны вопросов не найдены</h5>
+                <p class="text-muted">
+                    @if (string.IsNullOrEmpty(questionType) && string.IsNullOrEmpty(currentSection)) 
+                    {
+                        <text>Создайте первый шаблон вопроса</text>
+                    }
+                    else
+                    {
+                        <text>Попробуйте изменить параметры фильтрации</text>
+                    }
+                </p>
+                <a href="/question-templates/create" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Создать шаблон
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Удаление шаблона
+            document.querySelectorAll('.delete-template').forEach(button => {
+                button.addEventListener('click', function() {
+                    const templateId = this.getAttribute('data-id');
+                    const templateText = this.getAttribute('data-text');
+                    
+                    if (confirm(`Вы уверены, что хотите удалить шаблон:\n"${templateText}"?`)) {
+                        fetch(`/question-templates/delete/${templateId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                showToast('Успех', result.message, 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showToast('Ошибка', result.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('Ошибка', 'Произошла ошибка при удалении', 'error');
+                        });
+                    }
+                });
+            });
+        });
+
+        function showToast(title, message, type) {
+            if (typeof showToastNotification === 'function') {
+                showToastNotification(title, message, type);
+            } else {
+                alert(`${title}: ${message}`);
+            }
+        }
+    </script>
+}

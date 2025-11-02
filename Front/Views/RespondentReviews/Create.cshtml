@@ -1,0 +1,349 @@
+@model PerformanceReviewWeb.Models.RespondentReviewViewModel
+@{
+    ViewData["Title"] = "Оценка респондента";
+    var user = ViewBag.User as PerformanceReviewWeb.Models.UserResponse;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("RespondentGoals", "Goals")">Мои цели для оценки</a></li>
+                    <li class="breadcrumb-item active">Оценка респондента</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Оценка респондента: @Model.GoalTitle</h4>
+                        <span class="badge bg-primary">@Model.Questions.Count вопросов</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="Create">
+                        <input type="hidden" name="GoalId" value="@Model.GoalId" />
+                        
+                        @if (Model.Questions != null && Model.Questions.Any())
+                        {
+                            @for (int i = 0; i < Model.Questions.Count; i++)
+                            {
+                                var question = Model.Questions[i];
+                                <input type="hidden" name="Answers[@i].QuestionId" value="@question.Id" />
+                                
+                                <div class="card mb-4 question-card">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="mb-0">@question.QuestionText</h5>
+                                            @if (question.Weight != 1.0)
+                                            {
+                                                <span class="badge bg-info">Вес: @question.Weight</span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(question.Section))
+                                        {
+                                            <small class="text-muted">Раздел: @question.Section</small>
+                                        }
+                                    </div>
+                                    <div class="card-body">
+                                        @{
+                                            var questionType = question.QuestionType?.ToLowerInvariant()?.Trim() ?? "text";
+                                            var normalizedType = GetNormalizedQuestionType(questionType);
+                                        }
+                                        
+                                        @switch (normalizedType)
+                                        {
+                                            case "text":
+                                                <!-- Текстовый ответ -->
+                                                <div class="form-group">
+                                                    <label for="answer-@i" class="form-label">Ответ:</label>
+                                                    <textarea class="form-control" 
+                                                              id="answer-@i" 
+                                                              name="Answers[@i].Answer" 
+                                                              rows="4" 
+                                                              placeholder="Введите ваш ответ..."></textarea>
+                                                </div>
+                                                break;
+
+                                            case "scale":
+                                            case "rating":
+                                                <!-- Шкала оценки -->
+                                                <div class="form-group">
+                                                    <label class="form-label">Оценка (от 1 до @question.MaxScore):</label>
+                                                    <div class="rating-scale">
+                                                        @for (int score = 1; score <= question.MaxScore; score++)
+                                                        {
+                                                            <div class="form-check form-check-inline">
+                                                                <input class="form-check-input rating-radio" 
+                                                                       type="radio" 
+                                                                       name="Answers[@i].Score" 
+                                                                       id="score-@i-@score" 
+                                                                       value="@score">
+                                                                <label class="form-check-label rating-label" for="score-@i-@score">
+                                                                    @score
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                break;
+
+                                            case "multiple_choice":
+                                            case "choice":
+                                                <!-- Множественный выбор -->
+                                                @if (question.Options != null && question.Options.Any())
+                                                {
+                                                    <div class="form-group">
+                                                        <label class="form-label">Выберите вариант ответа:</label>
+                                                        <div class="options-list">
+                                                            @foreach (var option in question.Options.OrderBy(o => o.Value))
+                                                            {
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" 
+                                                                           type="radio" 
+                                                                           name="Answers[@i].SelectedOption" 
+                                                                           id="option-@i-@option.Id" 
+                                                                           value="@option.Text">
+                                                                    <label class="form-check-label" for="option-@i-@option.Id">
+                                                                        @option.Text
+                                                                        @if (option.Value > 0)
+                                                                        {
+                                                                            <span class="text-muted">(значение: @option.Value)</span>
+                                                                        }
+                                                                    </label>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="alert alert-warning">
+                                                        <small>Для этого вопроса не настроены варианты ответа</small>
+                                                    </div>
+                                                    <!-- Резервное текстовое поле -->
+                                                    <div class="form-group">
+                                                        <label for="answer-@i" class="form-label">Ответ:</label>
+                                                        <textarea class="form-control" 
+                                                                  id="answer-@i" 
+                                                                  name="Answers[@i].Answer" 
+                                                                  rows="4" 
+                                                                  placeholder="Введите ваш ответ..."></textarea>
+                                                    </div>
+                                                }
+                                                break;
+
+                                            default:
+                                                <!-- Универсальное текстовое поле -->
+                                                <div class="form-group">
+                                                    <label for="answer-@i" class="form-label">Ответ:</label>
+                                                    <textarea class="form-control" 
+                                                              id="answer-@i" 
+                                                              name="Answers[@i].Answer" 
+                                                              rows="4" 
+                                                              placeholder="Введите ваш ответ..."></textarea>
+                                                </div>
+                                                break;
+                                        }
+                                        
+                                        @if (question.RequiresManagerScoring)
+                                        {
+                                            <div class="alert alert-info mt-3 py-2">
+                                                <small><i class="fas fa-user-tie me-1"></i>Этот вопрос требует дополнительной оценки руководителя</small>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <h5>Вопросы не найдены</h5>
+                                <p>Для оценки респондента не настроены вопросы. Обратитесь к администратору.</p>
+                            </div>
+                        }
+
+                        <!-- Поле для комментариев -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Дополнительные комментарии</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="comments" class="form-label">Ваши комментарии и пожелания:</label>
+                                    <textarea class="form-control" 
+                                              id="comments"
+                                              name="Comments" 
+                                              rows="4" 
+                                              placeholder="Ваши дополнительные комментарии и пожелания..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Отправить оценку
+                            </button>
+                            <a href="@Url.Action("RespondentGoals", "Goals")" class="btn btn-secondary btn-lg">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetNormalizedQuestionType(string? questionType)
+    {
+        if (string.IsNullOrEmpty(questionType)) 
+            return "text";
+        
+        var type = questionType.ToLowerInvariant().Trim();
+        
+        return type switch
+        {
+            "text" or "textarea" or "open" or "respondent" => "text",
+            "scale" or "rating" or "score" or "number" => "scale",
+            "multiple_choice" or "choice" or "select" or "radio" => "multiple_choice",
+            "boolean" or "yesno" or "truefalse" => "boolean",
+            _ => type
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Добавляем диагностику в консоль
+            console.log('Respondent Review Questions:', @Json.Serialize(Model.Questions?.Select(q => new { 
+                q.QuestionText, 
+                q.QuestionType,
+                NormalizedType = GetNormalizedQuestionType(q.QuestionType),
+                q.Id,
+                Options = q.Options?.Count,
+                MaxScore = q.MaxScore
+            })));
+
+            // Улучшенная работа с радио-кнопками оценок
+            document.querySelectorAll('.rating-radio').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const labels = this.closest('.rating-scale').querySelectorAll('.rating-label');
+                    labels.forEach(label => {
+                        label.classList.remove('active');
+                    });
+                    
+                    if (this.checked) {
+                        const label = this.closest('.form-check').querySelector('.rating-label');
+                        label.classList.add('active');
+                    }
+                });
+            });
+
+            // Инициализация активных состояний
+            document.querySelectorAll('.rating-radio:checked').forEach(radio => {
+                const label = radio.closest('.form-check').querySelector('.rating-label');
+                label.classList.add('active');
+            });
+
+            // Счетчик символов для текстовых полей
+            document.querySelectorAll('textarea').forEach(textarea => {
+                const counter = document.createElement('small');
+                counter.className = 'text-muted character-counter';
+                counter.textContent = '0 символов';
+                
+                textarea.parentNode.appendChild(counter);
+                
+                textarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = length + ' символов';
+                    
+                    if (length > 1000) {
+                        counter.classList.add('text-warning');
+                    } else {
+                        counter.classList.remove('text-warning');
+                    }
+                });
+            });
+
+            // Валидация формы
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                let hasAtLeastOneAnswer = false;
+                
+                // Проверяем, есть ли хотя бы один ответ
+                const textAreas = this.querySelectorAll('textarea');
+                const selectedRadios = this.querySelectorAll('input[type="radio"]:checked');
+                const selectedOptions = this.querySelectorAll('input[type="radio"][name*="SelectedOption"]:checked');
+                
+                textAreas.forEach(ta => {
+                    if (ta.value.trim().length > 0) hasAtLeastOneAnswer = true;
+                });
+                
+                if (selectedRadios.length > 0) hasAtLeastOneAnswer = true;
+                if (selectedOptions.length > 0) hasAtLeastOneAnswer = true;
+                
+                if (!hasAtLeastOneAnswer && document.getElementById('comments').value.trim().length === 0) {
+                    e.preventDefault();
+                    if (!confirm('Вы не ответили ни на один вопрос и не добавили комментарии. Вы уверены, что хотите отправить пустую оценку?')) {
+                        return false;
+                    }
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .question-card {
+            border-left: 4px solid #20c997;
+        }
+        
+        .rating-label.active {
+            background-color: #20c997;
+            color: white;
+            border-color: #20c997;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .rating-scale .form-check-inline {
+            margin-right: 0.5rem;
+        }
+        
+        .rating-scale .rating-label {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .rating-scale .rating-label:hover {
+            background-color: #e9ecef;
+        }
+        
+        .character-counter {
+            display: block;
+            text-align: right;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+        }
+        
+        .options-list .form-check {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .options-list .form-check:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+}

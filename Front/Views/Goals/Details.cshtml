@@ -1,0 +1,368 @@
+@model PerformanceReviewWeb.Models.GoalResponse
+
+@{
+    ViewData["Title"] = "Детали цели";
+    var user = ViewBag.User as PerformanceReviewWeb.Models.UserResponse;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Goals")">Мои цели</a></li>
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">@Model.Title</h4>
+                    <div>
+                        <span class="badge @GetStatusBadgeClass(Model.Status)">@GetStatusText(Model.Status)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Основная информация -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Описание:</strong>
+                                <p class="mt-1">@Model.Description</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Ожидаемый результат:</strong>
+                                <p class="mt-1">@Model.ExpectedResult</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Дедлайн:</strong>
+                                <p class="mt-1">@Model.Deadline.ToString("dd.MM.yyyy HH:mm")</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Статус:</strong>
+                                <p class="mt-1">@GetStatusText(Model.Status)</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Дата создания:</strong>
+                                <p class="mt-1">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.TaskLink))
+                            {
+                                <div class="mb-3">
+                                    <strong>Ссылка на задачу:</strong>
+                                    <p class="mt-1">
+                                        <a href="@Model.TaskLink" target="_blank">@Model.TaskLink</a>
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Шаги выполнения -->
+                    @if (Model.Steps != null && Model.Steps.Any())
+                    {
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5>Шаги выполнения</h5>
+                                <div class="mt-2">
+                                    @foreach (var step in Model.Steps.OrderBy(s => s.OrderIndex))
+                                    {
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="card-title mb-1">@step.Title</h6>
+                                                        @if (!string.IsNullOrEmpty(step.Description))
+                                                        {
+                                                            <p class="card-text mb-0 text-muted">@step.Description</p>
+                                                        }
+                                                    </div>
+                                                    <span class="badge bg-light text-dark">Шаг @(step.OrderIndex + 1)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Респонденты -->
+                    @if (Model.RespondentNames != null && Model.RespondentNames.Any())
+                    {
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5>Респонденты для оценки</h5>
+                                <div class="mt-2">
+                                    @foreach (var respondent in Model.RespondentNames)
+                                    {
+                                        <span class="badge bg-info me-2">@respondent</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Действия -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="@Url.Action("Index", "Goals")" class="btn btn-secondary">
+                                    Назад к списку
+                                </a>
+                                
+                                @if (Model.Status == "active" && user?.Id == Model.EmployeeId)
+                                {
+                                    <button type="button" class="btn btn-success" 
+                                            onclick="completeGoal('@Model.Id')">
+                                        Завершить цель
+                                    </button>
+                                    <button type="button" class="btn btn-warning" 
+                                            onclick="cancelGoal('@Model.Id')">
+                                        Отменить цель
+                                    </button>
+                                }
+                                
+                                <!-- Ссылки на создание оценок -->
+                                <div class="dropdown">
+                                    <button class="btn btn-primary dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        Создать оценку
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <!-- Самооценка - только для владельца цели -->
+                                        @if (user?.Id == Model.EmployeeId)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="@Url.Action("Create", "Reviews", new { goalId = Model.Id, reviewType = "Self" })">
+                                                    <i class="fas fa-user me-2 text-info"></i>Самооценка
+                                                </a>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Оценки для руководителей -->
+                                        @if (user?.IsManager == true)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="@Url.Action("Create", "Reviews", new { goalId = Model.Id, reviewType = "Manager" })">
+                                                    <i class="fas fa-user-tie me-2 text-primary"></i>Оценка руководителя
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="@Url.Action("Create", "Reviews", new { goalId = Model.Id, reviewType = "Potential" })">
+                                                    <i class="fas fa-chart-line me-2 text-warning"></i>Оценка потенциала
+                                                </a>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Оценка респондента - если пользователь является респондентом -->
+                                        @if (Model.RespondentNames?.Contains(user?.FullName ?? "") == true)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="@Url.Action("Create", "RespondentReviews", new { goalId = Model.Id })">
+                                                    <i class="fas fa-users me-2 text-secondary"></i>Оценка респондента
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                
+                                <!-- Прямая ссылка для руководителей на завершение оценок -->
+                                @if (user?.IsManager == true)
+                                {
+                                    <a href="@Url.Action("PendingManagerReviews", "Reviews")" class="btn btn-warning">
+                                        <i class="fas fa-tasks me-1"></i>Ожидающие оценки
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Список существующих оценок -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>Существующие оценки</h5>
+                            <div id="reviews-list">
+                                <!-- Список оценок будет загружен через AJAX -->
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Загрузка...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function completeGoal(goalId) {
+            if (confirm('Вы уверены, что хотите завершить эту цель?')) {
+                $.post('@Url.Action("CompleteGoal", "Goals")/' + goalId)
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Ошибка: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Ошибка при завершении цели');
+                    });
+            }
+        }
+
+        function cancelGoal(goalId) {
+            if (confirm('Вы уверены, что хотите отменить эту цель?')) {
+                $.post('@Url.Action("CancelGoal", "Goals")/' + goalId)
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Ошибка: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Ошибка при отмене цели');
+                    });
+            }
+        }
+
+        // Загрузка списка оценок при открытии страницы
+        $(document).ready(function() {
+            loadReviews();
+        });
+
+        function loadReviews() {
+            $.get('@Url.Action("GetReviewsByGoal", "Goals", new { goalId = Model.Id })')
+                .done(function(reviews) {
+                    if (reviews && reviews.length > 0) {
+                        var html = '<div class="table-responsive"><table class="table table-striped table-hover">';
+                        html += '<thead><tr><th>Тип оценки</th><th>Автор</th><th>Дата</th><th>Балл</th><th>Статус</th><th>Действия</th></tr></thead><tbody>';
+                        
+                        reviews.forEach(function(review) {
+                            var reviewTypeText = getReviewTypeText(review.reviewType);
+                            var statusBadge = getStatusBadge(review.finalRating, review.reviewType);
+                            var scoreText = review.calculatedScore ? review.calculatedScore.toFixed(1) : '-';
+                            
+                            html += '<tr>';
+                            html += '<td>' + reviewTypeText + '</td>';
+                            html += '<td>' + (review.reviewerName || review.reviewerId) + '</td>';
+                            html += '<td>' + new Date(review.createdAt).toLocaleDateString('ru-RU') + '</td>';
+                            html += '<td><span class="badge bg-success">' + scoreText + '</span></td>';
+                            html += '<td>' + statusBadge + '</td>';
+                            html += '<td>';
+                            html += '<a href="@Url.Action("Details", "Reviews")/' + review.id + '" class="btn btn-sm btn-outline-info">';
+                            html += '<i class="fas fa-eye"></i>';
+                            html += '</a>';
+                            
+                            // Кнопка завершения для руководителей (если оценка не завершена)
+                            @if (user?.IsManager == true)
+                            {
+                                <text>
+                                if (!review.finalRating && review.reviewType !== 'Self') {
+                                    html += ' <a href="@Url.Action("CompleteManagerReview", "Reviews")/' + review.id + '" class="btn btn-sm btn-warning">';
+                                    html += '<i class="fas fa-edit"></i>';
+                                    html += '</a>';
+                                }
+                                </text>
+                            }
+                            
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        $('#reviews-list').html(html);
+                    } else {
+                        $('#reviews-list').html('<div class="alert alert-info text-center"><i class="fas fa-info-circle me-2"></i>Оценок пока нет</div>');
+                    }
+                })
+                .fail(function() {
+                    $('#reviews-list').html('<div class="alert alert-danger text-center"><i class="fas fa-exclamation-triangle me-2"></i>Ошибка загрузки оценок</div>');
+                });
+        }
+
+        function getReviewTypeText(reviewType) {
+            switch(reviewType) {
+                case 'Self': return '<span class="badge bg-info">Самооценка</span>';
+                case 'Manager': return '<span class="badge bg-primary">Руководитель</span>';
+                case 'Potential': return '<span class="badge bg-warning text-dark">Потенциал</span>';
+                case 'Respondent': return '<span class="badge bg-secondary">Респондент</span>';
+                default: return '<span class="badge bg-light text-dark">' + reviewType + '</span>';
+            }
+        }
+
+        function getStatusBadge(finalRating, reviewType) {
+            if (!finalRating) {
+                return '<span class="badge bg-warning text-dark">в процессе</span>';
+            }
+            
+            var ratingClass = 'bg-secondary';
+            switch(finalRating.toLowerCase()) {
+                case 'excellent': ratingClass = 'bg-success'; break;
+                case 'good': ratingClass = 'bg-primary'; break;
+                case 'satisfactory': ratingClass = 'bg-info'; break;
+                case 'needs_improvement': ratingClass = 'bg-warning'; break;
+                case 'poor': ratingClass = 'bg-danger'; break;
+            }
+            
+            return '<span class="badge ' + ratingClass + '">' + finalRating + '</span>';
+        }
+    </script>
+}
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "active" => "bg-success",
+            "completed" => "bg-primary", 
+            "cancelled" => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    public string GetStatusText(string status)
+    {
+        return status.ToLower() switch
+        {
+            "active" => "Активна",
+            "completed" => "Завершена",
+            "cancelled" => "Отменена",
+            _ => status
+        };
+    }
+    
+    public string GetReviewTypeText(string reviewType)
+    {
+        return reviewType switch
+        {
+            "Self" => "Самооценка",
+            "Manager" => "Оценка руководителя",
+            "Potential" => "Оценка потенциала",
+            "Respondent" => "Оценка респондента",
+            _ => reviewType
+        };
+    }
+}

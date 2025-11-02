@@ -1,0 +1,247 @@
+@using PerformanceReviewWeb.Models
+@model GoalAnalyticsResponse
+@{
+    ViewData["Title"] = $"Аналитика цели: {Model.GoalTitle}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-chart-line me-2"></i>Аналитика цели: @Model.GoalTitle</h1>
+        <a href="/analytics" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Назад к аналитике
+        </a>
+    </div>
+
+    <!-- ИТОГОВАЯ ОЦЕНКА РУКОВОДИТЕЛЯ -->
+    @if (!string.IsNullOrEmpty(Model.FinalRating))
+    {
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Итоговая оценка руководителя
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="border rounded p-4 bg-light">
+                            <h2 class="text-success mb-2">@GetRatingText(Model.FinalRating)</h2>
+                            <div class="rating-badge rating-@Model.FinalRating.ToLower() fs-6 p-2">
+                                Итоговый рейтинг
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h6><i class="fas fa-comment me-2"></i>Обратная связь руководителя:</h6>
+                        <div class="alert alert-info">
+                            @if (!string.IsNullOrEmpty(Model.FinalFeedback))
+                            {
+                                <p class="mb-0">@Model.FinalFeedback</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted">Обратная связь не предоставлена</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning mb-4">
+            <i class="fas fa-clock me-2"></i>
+            <strong>Оценка в процессе</strong> - ожидается завершение оценки руководителем.
+        </div>
+    }
+
+    <!-- Заголовок цели -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">Детальная аналитика</h4>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <strong>Общий рейтинг:</strong>
+                    @if (!string.IsNullOrEmpty(Model.FinalRating))
+                    {
+                        <span class="badge rating-@Model.FinalRating.ToLower() ms-2">@GetRatingText(Model.FinalRating)</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning ms-2">Не установлен</span>
+                    }
+                </div>
+                <div class="col-md-3">
+                    <strong>Всего оценок:</strong>
+                    <span class="badge bg-primary ms-2">@Model.ReviewCount</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Респонденты:</strong>
+                    <span class="badge bg-secondary ms-2">@Model.RespondentCount</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Общий балл:</strong>
+                    <span class="badge bg-success ms-2">@Model.Scores.TotalScore.ToString("F1")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Визуализация баллов -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Распределение баллов</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>Самооценка:</label>
+                        <div class="progress mb-2" style="height: 30px;">
+                            <div class="progress-bar bg-primary d-flex align-items-center justify-content-center" 
+                                 style="width: @(GetProgressWidth(Model.Scores.SelfScore))%">
+                                <strong>@Model.Scores.SelfScore.ToString("F1")</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Оценка руководителя:</label>
+                        <div class="progress mb-2" style="height: 30px;">
+                            <div class="progress-bar bg-info d-flex align-items-center justify-content-center" 
+                                 style="width: @(GetProgressWidth(Model.Scores.ManagerScore))%">
+                                <strong>@Model.Scores.ManagerScore.ToString("F1")</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Оценка коллег:</label>
+                        <div class="progress mb-2" style="height: 30px;">
+                            <div class="progress-bar bg-secondary d-flex align-items-center justify-content-center" 
+                                 style="width: @(GetProgressWidth(Model.Scores.RespondentScore))%">
+                                <strong>@Model.Scores.RespondentScore.ToString("F1")</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Сводка баллов</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-primary">@Model.Scores.SelfScore.ToString("F1")</h3>
+                                <small>Самооценка</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-info">@Model.Scores.ManagerScore.ToString("F1")</h3>
+                                <small>Руководитель</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-secondary">@Model.Scores.RespondentScore.ToString("F1")</h3>
+                                <small>Коллеги</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <div class="border rounded p-3 bg-light">
+                            <h2 class="text-success mb-0">@Model.Scores.TotalScore.ToString("F1")</h2>
+                            <small class="text-muted">Общий балл</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рекомендации -->
+    @if (Model.Recommendations.Any())
+    {
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Рекомендации для развития</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var recommendation in Model.Recommendations)
+                    {
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>@recommendation
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+
+    <!-- Информация о состоянии оценки -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Информация об оценке</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Статус оценки:</strong>
+                    @if (!string.IsNullOrEmpty(Model.FinalRating))
+                    {
+                        <span class="badge bg-success ms-2">Завершена</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning ms-2">В процессе</span>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <strong>Всего оценок по цели:</strong>
+                    <span class="badge bg-primary ms-2">@Model.ReviewCount</span>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.FinalRating))
+            {
+                <div class="mt-3 alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Руководитель завершил оценку и предоставил итоговый рейтинг.
+                </div>
+            }
+            else
+            {
+                <div class="mt-3 alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    После завершения оценки руководителем здесь появится итоговый рейтинг и обратная связь.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetRatingText(string rating)
+    {
+        return rating?.ToLower() switch
+        {
+            "excellent" => "Отлично",
+            "good" => "Хорошо",
+            "satisfactory" => "Удовлетворительно",
+            "poor" => "Плохо",
+            "unsatisfactory" => "Неудовлетворительно",
+            _ => rating ?? "Не установлен"
+        };
+    }
+
+    private double GetProgressWidth(double score)
+    {
+        // Преобразуем оценку из 5-балльной шкалы в проценты (максимум 5 баллов = 100%)
+        return Math.Min(score * 20, 100);
+    }
+}

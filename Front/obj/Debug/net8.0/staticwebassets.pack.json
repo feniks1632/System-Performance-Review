@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review-Front-v2/wwwroot/css/site.css",
+      "PackagePath": "staticwebassets/css/site.css"
+    },
+    {
+      "Id": "/home/oleg/vs_csharp/csharp/sys-prew/System-Performance-Review-Front-v2/wwwroot/js/site.js",
+      "PackagePath": "staticwebassets/js/site.js"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.System-Performance-Review-Front-v2.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.System-Performance-Review-Front-v2.props",
+      "PackagePath": "build\\System-Performance-Review-Front-v2.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.System-Performance-Review-Front-v2.props",
+      "PackagePath": "buildMultiTargeting\\System-Performance-Review-Front-v2.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.System-Performance-Review-Front-v2.props",
+      "PackagePath": "buildTransitive\\System-Performance-Review-Front-v2.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

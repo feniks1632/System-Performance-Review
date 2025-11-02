@@ -1,0 +1,100 @@
+@model PerformanceReviewWeb.Models.GoalResponse
+
+@{
+    ViewData["Title"] = "Цель для оценки";
+    var user = ViewBag.User as PerformanceReviewWeb.Models.UserResponse;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("RespondentGoals", "Goals")">Мои цели для оценки</a></li>
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">@Model.Title</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Сотрудник:</strong> @Model.EmployeeName
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Дедлайн:</strong> @Model.Deadline.ToString("dd.MM.yyyy")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Описание:</strong>
+                            <p class="mt-2">@Model.Description</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Ожидаемый результат:</strong>
+                            <p class="mt-2">@Model.ExpectedResult</p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.TaskLink))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Ссылка на задачу:</strong>
+                                <a href="@Model.TaskLink" target="_blank" class="ms-2">@Model.TaskLink</a>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Steps != null && Model.Steps.Any())
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Шаги выполнения:</strong>
+                                <div class="mt-2">
+                                    @foreach (var step in Model.Steps.OrderBy(s => s.OrderIndex))
+                                    {
+                                        <div class="card mb-2">
+                                            <div class="card-body py-2">
+                                                <h6 class="card-title mb-1">@step.Title</h6>
+                                                @if (!string.IsNullOrEmpty(step.Description))
+                                                {
+                                                    <p class="card-text mb-0 text-muted">@step.Description</p>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <a href="@Url.Action("Create", "Reviews", new { goalId = Model.Id, reviewType = "Respondent" })" 
+                                   class="btn btn-primary">
+                                    Создать оценку
+                                </a>
+                                <a href="@Url.Action("RespondentGoals", "Goals")" class="btn btn-secondary">
+                                    Назад к списку
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

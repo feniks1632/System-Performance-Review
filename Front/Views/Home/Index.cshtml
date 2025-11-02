@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Performance Review System";
+}
+
+<div class="row align-items-center min-vh-100 py-5">
+    <div class="col-lg-6">
+        <div class="mb-5">
+            <h1 class="display-4 fw-bold text-primary mb-4">Performance Review System</h1>
+            <p class="lead mb-4">Современная система управления эффективностью сотрудников с продвинутой аналитикой и рекомендациями по развитию</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="/login" class="btn btn-primary btn-lg px-4 me-md-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Войти
+                </a>
+                <a href="/register" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Регистрация
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <div class="row text-center g-4">
+                    <div class="col-md-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                            <h5>Постановка целей</h5>
+                            <p class="text-muted small">Управление целями с подпунктами и дедлайнами</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                            <h5>Аналитика</h5>
+                            <p class="text-muted small">Детальная аналитика и рекомендации</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-users fa-3x text-info mb-3"></i>
+                            <h5>Обратная связь</h5>
+                            <p class="text-muted small">Многоканальная система оценок</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .feature-icon {
+        transition: transform 0.3s ease;
+    }
+    .feature-icon:hover {
+        transform: translateY(-5px);
+    }
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+</style>

@@ -1,0 +1,157 @@
+@model List<PerformanceReviewWeb.Models.GoalResponse>
+@{
+    ViewData["Title"] = "Мои цели";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Мои цели</h2>
+    <a href="/goals/create" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Создать цель
+    </a>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">У вас пока нет целей</h4>
+            <p class="text-muted mb-4">Создайте свою первую цель для отслеживания прогресса</p>
+            <a href="/goals/create" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Создать первую цель
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var goal in Model)
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 goal-title">@goal.Title</h5>
+                        <span class="badge 
+                            @(goal.Status == "active" ? "bg-primary" : 
+                              goal.Status == "completed" ? "bg-success" : "bg-secondary")">
+                            @(goal.Status == "active" ? "Активна" : 
+                              goal.Status == "completed" ? "Завершена" : "Отменена")
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">@goal.Description</p>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Ожидаемый результат:</small>
+                            <p class="mb-2">@goal.ExpectedResult</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted goal-deadline">Дедлайн: @goal.Deadline.ToString("dd.MM.yyyy")</small>
+                        </div>
+
+                        @if (goal.Steps.Any())
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted">Подпункты:</small>
+                                <div class="mt-2">
+                                    @foreach (var step in goal.Steps.OrderBy(s => s.OrderIndex))
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input step-checkbox" 
+                                                   type="checkbox" 
+                                                   data-step-id="@step.Id"
+                                                   @(step.IsCompleted ? "checked" : "")>
+                                            <label class="form-check-label @(step.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                                                @step.Title
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (goal.RespondentNames.Any())
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted">Респонденты:</small>
+                                <div>@string.Join(", ", goal.RespondentNames)</div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Создана: @goal.CreatedAt.ToString("dd.MM.yyyy")</small>
+                            <div>
+                                <a href="/goals/@goal.Id" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if (goal.Status == "active")
+                                {
+                                    <button class="btn btn-sm btn-outline-success complete-goal" data-goal-id="@goal.Id">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Handle step completion
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.step-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const stepId = this.getAttribute('data-step-id');
+                    const isCompleted = this.checked;
+                    
+                    const url = isCompleted ? 
+                        `/goal-steps/complete/${stepId}` : 
+                        `/goal-steps/incomplete/${stepId}`;
+                    
+                    fetch(url, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                this.checked = !isCompleted;
+                                alert('Ошибка обновления статуса подпункта');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            this.checked = !isCompleted;
+                        });
+                });
+            });
+
+            // Handle goal completion
+            document.querySelectorAll('.complete-goal').forEach(button => {
+                button.addEventListener('click', function() {
+                    const goalId = this.getAttribute('data-goal-id');
+                    
+                    if (confirm('Вы уверены, что хотите завершить эту цель?')) {
+                        fetch(`/goals/${goalId}/complete`, { method: 'POST' })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    alert('Ошибка завершения цели: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Ошибка завершения цели');
+                            });
+                    }
+                });
+            });
+        });
+    </script>
+}

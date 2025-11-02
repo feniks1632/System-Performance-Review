@@ -1,0 +1,289 @@
+@model PerformanceReviewWeb.Models.ManagerScoringViewModel
+@{
+    ViewData["Title"] = "Завершение оценки";
+    var user = ViewBag.User as PerformanceReviewWeb.Models.UserResponse;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reviews/pending-manager">Ожидающие оценки</a></li>
+                    <li class="breadcrumb-item active">Завершение оценки</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>Завершение оценки
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Информация об оценке -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Информация об оценке</h6>
+                                    <p class="mb-1"><strong>ID оценки:</strong> @Model.Review?.Id</p>
+                                    <p class="mb-1"><strong>Тип:</strong> @Model.Review?.ReviewType</p>
+                                    <p class="mb-1"><strong>ID цели:</strong> @Model.Review?.GoalId</p>
+                                    <p class="mb-0"><strong>Автор:</strong> @Model.Review?.ReviewerId</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Статистика</h6>
+                                    <p class="mb-1"><strong>Текущий балл:</strong> 
+                                        @if (Model.Review?.CalculatedScore.HasValue == true)
+                                        {
+                                            <span class="badge bg-success">@Model.Review.CalculatedScore.Value.ToString("F1")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">не рассчитан</span>
+                                        }
+                                    </p>
+                                    <p class="mb-1"><strong>Вопросов для оценки:</strong> 
+                                        <span class="badge bg-warning text-dark">@Model.PendingQuestions.Count</span>
+                                    </p>
+                                    <p class="mb-0"><strong>Дата создания:</strong> @Model.Review?.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Вопросы, ожидающие оценку руководителя -->
+                    @if (Model.PendingQuestions.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-star me-2"></i>Вопросы, ожидающие вашу оценку
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="managerScoresForm">
+                                    @for (int i = 0; i < Model.PendingQuestions.Count; i++)
+                                    {
+                                        var question = Model.PendingQuestions[i];
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">@question.QuestionText</h6>
+                                                <small class="text-muted">Вес: @question.Weight</small>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (!string.IsNullOrEmpty(question.Answer))
+                                                {
+                                                    <div class="mb-3">
+                                                        <strong>Ответ сотрудника:</strong>
+                                                        <p class="mt-1 p-2 bg-light rounded">@question.Answer</p>
+                                                    </div>
+                                                }
+                                                
+                                                @if (question.CurrentScore.HasValue)
+                                                {
+                                                    <div class="mb-3">
+                                                        <strong>Текущая оценка:</strong>
+                                                        <span class="badge bg-info ms-2">@question.CurrentScore.Value.ToString("F1")</span>
+                                                    </div>
+                                                }
+
+                                                <div class="form-group">
+                                                    <label for="score-@i" class="form-label">Ваша оценка (1-@question.MaxScore):</label>
+                                                    <input type="number" 
+                                                           class="form-control manager-score" 
+                                                           id="score-@i"
+                                                           data-question-id="@question.QuestionId"
+                                                           min="1" 
+                                                           max="@question.MaxScore" 
+                                                           step="0.1"
+                                                           placeholder="Введите оценку от 1 до @question.MaxScore">
+                                                    <small class="text-muted">Вес этого вопроса: @question.Weight</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <button type="button" id="saveScoresBtn" class="btn btn-success">
+                                            <i class="fas fa-save me-1"></i>Сохранить оценки
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Завершение оценки -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-flag-checkered me-2"></i>Завершение оценки
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="/reviews/complete-manager/@Model.ReviewId" id="finalReviewForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="FinalRating" class="form-label">Итоговый рейтинг *</label>
+                                            <select asp-for="FinalReview.FinalRating" class="form-control" required>
+                                                <option value="">Выберите рейтинг</option>
+                                                <option value="excellent">Отлично</option>
+                                                <option value="good">Хорошо</option>
+                                                <option value="satisfactory">Удовлетворительно</option>
+                                                <option value="needs_improvement">Требует улучшения</option>
+                                                <option value="poor">Неудовлетворительно</option>
+                                            </select>
+                                            <span asp-validation-for="FinalReview.FinalRating" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="FinalFeedback" class="form-label">Итоговая обратная связь *</label>
+                                            <textarea asp-for="FinalReview.FinalFeedback" class="form-control" 
+                                                      rows="4" placeholder="Напишите итоговую обратную связь для сотрудника..." 
+                                                      required></textarea>
+                                            <span asp-validation-for="FinalReview.FinalFeedback" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <a href="/reviews/pending-manager" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>Назад
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" id="completeReviewBtn">
+                                        <i class="fas fa-check-circle me-1"></i>Завершить оценку
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Сохранение оценок руководителя
+            document.getElementById('saveScoresBtn').addEventListener('click', function() {
+                const scores = [];
+                const scoreInputs = document.querySelectorAll('.manager-score');
+                
+                let hasErrors = false;
+                
+                scoreInputs.forEach(input => {
+                    const score = parseFloat(input.value);
+                    const questionId = input.getAttribute('data-question-id');
+                    
+                    if (!isNaN(score) && score >= 1 && score <= parseFloat(input.max)) {
+                        scores.push({
+                            questionId: questionId,
+                            score: score
+                        });
+                    } else if (input.value.trim() !== '') {
+                        hasErrors = true;
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (hasErrors) {
+                    alert('Пожалуйста, проверьте введенные оценки. Они должны быть числами от 1 до максимального значения.');
+                    return;
+                }
+                
+                if (scores.length === 0) {
+                    alert('Пожалуйста, введите хотя бы одну оценку.');
+                    return;
+                }
+                
+                const btn = this;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Сохранение...';
+                btn.disabled = true;
+                
+                fetch('/reviews/@Model.ReviewId/score-manager-questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(scores)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Оценки успешно сохранены!');
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Ошибка при сохранении оценок: ' + error);
+                })
+                .finally(() => {
+                    btn.innerHTML = '<i class="fas fa-save me-1"></i>Сохранить оценки';
+                    btn.disabled = false;
+                });
+            });
+            
+            // Валидация формы завершения
+            document.getElementById('finalReviewForm').addEventListener('submit', function(e) {
+                const finalRating = document.getElementById('FinalRating').value;
+                const finalFeedback = document.getElementById('FinalFeedback').value;
+                
+                if (!finalRating || !finalFeedback.trim()) {
+                    e.preventDefault();
+                    alert('Пожалуйста, заполните все обязательные поля для завершения оценки.');
+                    return;
+                }
+                
+                const btn = document.getElementById('completeReviewBtn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Завершение...';
+                btn.disabled = true;
+            });
+            
+            // Валидация числовых полей
+            document.querySelectorAll('.manager-score').forEach(input => {
+                input.addEventListener('blur', function() {
+                    const value = parseFloat(this.value);
+                    const max = parseFloat(this.max);
+                    
+                    if (!isNaN(value)) {
+                        if (value < 1) {
+                            this.value = 1;
+                        } else if (value > max) {
+                            this.value = max;
+                        }
+                        this.classList.remove('is-invalid');
+                    } else if (this.value.trim() !== '') {
+                        this.classList.add('is-invalid');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        .manager-score:invalid {
+            border-color: #dc3545;
+        }
+        
+        .card {
+            margin-bottom: 1rem;
+        }
+    </style>
+}

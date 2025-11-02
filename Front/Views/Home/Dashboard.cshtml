@@ -1,0 +1,286 @@
+@{
+    ViewData["Title"] = "Дашборд";
+    var user = ViewBag.User as dynamic;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Дашборд</h2>
+    <div class="text-muted">
+        <i class="fas fa-user me-1"></i>Добро пожаловать, @(user?.FullName ?? "Пользователь")!
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Активных целей</div>
+                        <div class="fs-4 fw-bold" id="activeGoalsCount">0</div>
+                    </div>
+                    <div class="opacity-50">
+                        <i class="fas fa-bullseye fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Завершенных целей</div>
+                        <div class="fs-4 fw-bold" id="completedGoalsCount">0</div>
+                    </div>
+                    <div class="opacity-50">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Ожидают оценки</div>
+                        <div class="fs-4 fw-bold" id="pendingReviewsCount">0</div>
+                    </div>
+                    <div class="opacity-50">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Текущий рейтинг</div>
+                        <div class="fs-4 fw-bold" id="currentRating">-</div>
+                    </div>
+                    <div class="opacity-50">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Активные цели -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Активные цели</h5>
+                <a href="/goals" class="btn btn-sm btn-outline-primary">Все цели</a>
+            </div>
+            <div class="card-body">
+                <div id="activeGoalsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Быстрые действия -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/goals/create" class="btn btn-primary mb-2">
+                        <i class="fas fa-plus me-2"></i>Создать цель
+                    </a>
+                    <a href="/goals/respondent" class="btn btn-outline-primary mb-2">
+                        <i class="fas fa-user-check me-2"></i>Оценить коллег
+                    </a>
+                    <a href="/analytics" class="btn btn-outline-success mb-2">
+                        <i class="fas fa-chart-bar me-2"></i>Посмотреть аналитику
+                    </a>
+                    @if (user?.IsManager == true)
+                    {
+                        <a href="/users/subordinates" class="btn btn-outline-info mb-2">
+                            <i class="fas fa-users me-2"></i>Мои подчиненные
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Завершенные цели -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Недавно завершенные цели</h5>
+                <a href="/goals?status=completed" class="btn btn-sm btn-outline-success">Все завершенные</a>
+            </div>
+            <div class="card-body">
+                <div id="completedGoalsList">
+                    <div class="text-center py-2">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Уведомления -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Последние уведомления</h5>
+                <a href="/notifications" class="btn btn-sm btn-outline-primary">Все уведомления</a>
+            </div>
+            <div class="card-body">
+                <div id="recentNotifications">
+                    <div class="text-center py-2">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Загружаем цели с фильтрацией по статусу
+                const goalsResponse = await fetch('/goals?status=active');
+                if (goalsResponse.ok) {
+                    const goalsHtml = await goalsResponse.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(goalsHtml, 'text/html');
+                    const activeGoals = doc.querySelectorAll('.goal-card');
+                    
+                    // Обновляем счетчик активных целей
+                    document.getElementById('activeGoalsCount').textContent = activeGoals.length;
+                    
+                    // Отображаем активные цели
+                    const activeGoalsList = document.getElementById('activeGoalsList');
+                    if (activeGoals.length > 0) {
+                        let html = '';
+                        Array.from(activeGoals).slice(0, 5).forEach(goal => {
+                            const title = goal.querySelector('.goal-title')?.textContent || 'Цель';
+                            const deadline = goal.querySelector('.goal-deadline')?.textContent || '';
+                            const progress = goal.querySelector('.progress-bar')?.style.width || '0%';
+                            
+                            html += `
+                                <div class="border-bottom pb-2 mb-2">
+                                    <h6 class="mb-1">${title}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">${deadline}</small>
+                                        <span class="badge bg-primary">${progress}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        activeGoalsList.innerHTML = html;
+                    } else {
+                        activeGoalsList.innerHTML = '<p class="text-muted text-center">Нет активных целей</p>';
+                    }
+                }
+
+                // Загружаем завершенные цели
+                const completedGoalsResponse = await fetch('/goals?status=completed');
+                if (completedGoalsResponse.ok) {
+                    const completedGoalsHtml = await completedGoalsResponse.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(completedGoalsHtml, 'text/html');
+                    const completedGoals = doc.querySelectorAll('.goal-card');
+                    
+                    // Обновляем счетчик завершенных целей
+                    document.getElementById('completedGoalsCount').textContent = completedGoals.length;
+                    
+                    // Отображаем завершенные цели
+                    const completedGoalsList = document.getElementById('completedGoalsList');
+                    if (completedGoals.length > 0) {
+                        let html = '';
+                        Array.from(completedGoals).slice(0, 3).forEach(goal => {
+                            const title = goal.querySelector('.goal-title')?.textContent || 'Цель';
+                            const completedDate = goal.querySelector('.goal-completed-date')?.textContent || 
+                                                goal.querySelector('.goal-deadline')?.textContent || '';
+                            const score = goal.querySelector('.goal-score')?.textContent || '';
+                            
+                            html += `
+                                <div class="border-bottom pb-2 mb-2">
+                                    <h6 class="mb-1">${title}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Завершена: ${completedDate}</small>
+                                        ${score ? `<span class="badge bg-success">${score}</span>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        completedGoalsList.innerHTML = html;
+                    } else {
+                        completedGoalsList.innerHTML = '<p class="text-muted text-center">Нет завершенных целей</p>';
+                    }
+                }
+
+                // Загружаем уведомления
+                const notifResponse = await fetch('/notifications?unreadOnly=true&limit=5');
+                if (notifResponse.ok) {
+                    const notifHtml = await notifResponse.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(notifHtml, 'text/html');
+                    const notifications = doc.querySelectorAll('.notification-item');
+                    
+                    document.getElementById('pendingReviewsCount').textContent = notifications.length;
+                    
+                    const recentNotifications = document.getElementById('recentNotifications');
+                    if (notifications.length > 0) {
+                        let html = '';
+                        Array.from(notifications).slice(0, 3).forEach(notif => {
+                            const title = notif.querySelector('.notification-title')?.textContent || 'Уведомление';
+                            const time = notif.querySelector('.notification-time')?.textContent || '';
+                            html += `
+                                <div class="border-bottom pb-2 mb-2">
+                                    <h6 class="mb-1">${title}</h6>
+                                    <small class="text-muted">${time}</small>
+                                </div>
+                            `;
+                        });
+                        recentNotifications.innerHTML = html;
+                    } else {
+                        recentNotifications.innerHTML = '<p class="text-muted text-center">Нет новых уведомлений</p>';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+    </script>
+}

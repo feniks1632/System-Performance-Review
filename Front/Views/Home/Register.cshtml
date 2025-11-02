@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "Регистрация";
+    var managers = ViewBag.Managers as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+<div class="row justify-content-center min-vh-100 align-items-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="card-title mb-0 text-center">
+                    <i class="fas fa-user-plus me-2"></i>Регистрация
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/register" id="registerForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="FullName" class="form-label">Полное имя</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" id="FullName" name="FullName" class="form-control" placeholder="Иванов Иван Иванович" required />
+                                </div>
+                                <span class="text-danger small fullname-error"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" id="Email" name="Email" class="form-control" placeholder="user@example.com" required />
+                                </div>
+                                <span class="text-danger small email-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" id="Password" name="Password" class="form-control" placeholder="Не менее 6 символов" required minlength="6" />
+                        </div>
+                        <span class="text-danger small password-error"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" id="IsManager" name="IsManager" class="form-check-input" value="true" />
+                                    <label for="IsManager" class="form-check-label">Я руководитель</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ManagerId" class="form-label">Руководитель</label>
+                                <select id="ManagerId" name="ManagerId" class="form-select">
+                                    <option value="">Выберите руководителя</option>
+                                    @foreach (var manager in managers)
+                                    {
+                                        <option value="@manager.Id">@manager.FullName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
+                            <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="mb-0">Уже есть аккаунт? 
+                        <a href="/login" class="text-decoration-none">Войдите</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('IsManager').addEventListener('change', function() {
+            const managerSelect = document.getElementById('ManagerId');
+            managerSelect.disabled = this.checked;
+            if (this.checked) {
+                managerSelect.value = '';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('registerBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Регистрация...';
+            btn.disabled = true;
+        });
+
+        // Initialize form state
+        document.addEventListener('DOMContentLoaded', function() {
+            const isManager = document.getElementById('IsManager');
+            const managerSelect = document.getElementById('ManagerId');
+            managerSelect.disabled = isManager.checked;
+        });
+    </script>
+}

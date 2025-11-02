@@ -1,0 +1,111 @@
+@using PerformanceReviewWeb.Models
+
+@model UserResponse
+@{
+    ViewData["Title"] = "Детали пользователя";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-circle"></i> Детали пользователя
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ID пользователя</label>
+                            <p class="form-control-plaintext font-monospace">@Model.Id</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            <p class="form-control-plaintext">@Model.Email</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ФИО</label>
+                            <p class="form-control-plaintext">@Model.FullName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Роль</label>
+                            <p class="form-control-plaintext">
+                                @if (Model.IsManager)
+                                {
+                                    <span class="badge bg-success">Руководитель</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">Сотрудник</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Статус</label>
+                            <p class="form-control-plaintext">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Активен</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Неактивен</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ID руководителя</label>
+                            <p class="form-control-plaintext font-monospace">
+                                @(string.IsNullOrEmpty(Model.ManagerId) ? "Не назначен" : Model.ManagerId)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Дата регистрации</label>
+                            <p class="form-control-plaintext">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Быстрые действия</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("ProfileById", "Users", new { id = Model.Id })" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-user"></i> Перейти в профиль
+                        </a>
+                        <a href="@Url.Action("Index", "Goals", new { employeeId = Model.Id })" 
+                           class="btn btn-outline-success">
+                            <i class="fas fa-bullseye"></i> Просмотреть цели
+                        </a>
+                        @if (ViewBag.User.IsManager && ViewBag.User.Id != Model.Id)
+                        {
+                            <a href="@Url.Action("ProfileById", "Users", new { id = Model.Id })#assignManager" 
+                               class="btn btn-outline-info">
+                                <i class="fas fa-user-plus"></i> Назначить руководителя
+                            </a>
+                        }
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,326 @@
+@model PerformanceReviewWeb.Models.GoalCreateModel
+@{
+    ViewData["Title"] = "Создание цели";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Создание новой цели
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/goals/create" id="createGoalForm">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label for="Title" class="form-label">Название цели *</label>
+                        <input type="text" id="Title" name="Title" class="form-control @(ViewData.ModelState["Title"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                               placeholder="Введите название цели" value="@Model.Title" required />
+                        @if (ViewData.ModelState["Title"]?.Errors.Count > 0)
+                        {
+                            <div class="invalid-feedback">
+                                @ViewData.ModelState["Title"]?.Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="Description" class="form-label">Описание цели *</label>
+                        <textarea id="Description" name="Description" class="form-control @(ViewData.ModelState["Description"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                  rows="3" placeholder="Опишите цель подробно" required>@Model.Description</textarea>
+                        @if (ViewData.ModelState["Description"]?.Errors.Count > 0)
+                        {
+                            <div class="invalid-feedback">
+                                @ViewData.ModelState["Description"]?.Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ExpectedResult" class="form-label">Ожидаемый результат *</label>
+                        <textarea id="ExpectedResult" name="ExpectedResult" class="form-control @(ViewData.ModelState["ExpectedResult"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                  rows="2" placeholder="Какой результат ожидается?" required>@Model.ExpectedResult</textarea>
+                        @if (ViewData.ModelState["ExpectedResult"]?.Errors.Count > 0)
+                        {
+                            <div class="invalid-feedback">
+                                @ViewData.ModelState["ExpectedResult"]?.Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Deadline" class="form-label">Дедлайн *</label>
+                                <input type="datetime-local" id="Deadline" name="Deadline" 
+                                       class="form-control @(ViewData.ModelState["Deadline"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                       value="@Model.Deadline.ToString("yyyy-MM-ddTHH:mm")" required />
+                                @if (ViewData.ModelState["Deadline"]?.Errors.Count > 0)
+                                {
+                                    <div class="invalid-feedback">
+                                        @ViewData.ModelState["Deadline"]?.Errors.First().ErrorMessage
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="TaskLink" class="form-label">Ссылка на задачу</label>
+                                <input type="url" id="TaskLink" name="TaskLink" class="form-control @(ViewData.ModelState["TaskLink"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                       placeholder="https://..." value="@Model.TaskLink" />
+                                @if (ViewData.ModelState["TaskLink"]?.Errors.Count > 0)
+                                {
+                                    <div class="invalid-feedback">
+                                        @ViewData.ModelState["TaskLink"]?.Errors.First().ErrorMessage
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Steps -->
+                    <div class="mb-4">
+                        <label class="form-label">Подпункты цели (максимум 3)</label>
+                        <div id="stepsContainer">
+                            @if (Model.Steps != null && Model.Steps.Any())
+                            {
+                                for (int i = 0; i < Model.Steps.Count; i++)
+                                {
+                                    <div class="card mb-2 step-item" data-step-index="@i">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <input type="text" name="Steps[@i].Title" 
+                                                           class="form-control mb-2" placeholder="Название подпункта" 
+                                                           value="@Model.Steps[i].Title" required />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="number" name="Steps[@i].OrderIndex" 
+                                                           class="form-control mb-2" value="@i" placeholder="Порядок" />
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-step">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <textarea name="Steps[@i].Description" 
+                                                      class="form-control" rows="2" placeholder="Описание подпункта">@Model.Steps[i].Description</textarea>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="addStepBtn">
+                            <i class="fas fa-plus me-1"></i>Добавить подпункт
+                        </button>
+                        @if (ViewData.ModelState["Steps"]?.Errors.Count > 0)
+                        {
+                            <div class="text-danger small">
+                                @ViewData.ModelState["Steps"]?.Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Respondents - РУЧНОЙ ВВОД UUID -->
+                    <div class="mb-3">
+                        <label for="RespondentIdsInput" class="form-label">ID респондентов *</label>
+                        <input type="text" id="RespondentIdsInput" class="form-control @(ViewData.ModelState["RespondentIds"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                               placeholder="Введите UUID пользователей через запятую (например: a5232d2e-5413-490f-b391-9fd32ab110bd, b6233e3f-6514-5a10-c492-0ae43bc221ce)" 
+                               value="@Model.RespondentIds" />
+                        <input type="hidden" id="RespondentIds" name="RespondentIds" value="@Model.RespondentIds" />
+                        <small class="text-muted">
+                            Введите UUID пользователей через запятую. Максимум 5 респондентов.
+                            <br>Пример UUID: a5232d2e-5413-490f-b391-9fd32ab110bd
+                        </small>
+                        @if (ViewData.ModelState["RespondentIds"]?.Errors.Count > 0)
+                        {
+                            <div class="invalid-feedback">
+                                @ViewData.ModelState["RespondentIds"]?.Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Оценка цели
+                        </h6>
+                        <p class="mb-0">
+                            После создания цели вы сможете создать самооценку на странице просмотра цели. 
+                            Самооценка создается вручную, когда вы будете готовы оценить свой прогресс.
+                        </p>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/goals" class="btn btn-secondary me-md-2">Отмена</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>Создать цель
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let stepCount = @(Model.Steps?.Count ?? 0);
+        const maxSteps = 3;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const addStepBtn = document.getElementById('addStepBtn');
+            const stepsContainer = document.getElementById('stepsContainer');
+            const form = document.getElementById('createGoalForm');
+            const respondentIdsInput = document.getElementById('RespondentIdsInput');
+            const respondentIdsHidden = document.getElementById('RespondentIds');
+
+            // Синхронизация видимого поля со скрытым полем для модели
+            respondentIdsInput.addEventListener('input', function() {
+                respondentIdsHidden.value = this.value;
+            });
+
+            // Валидация ID респондентов
+            respondentIdsInput.addEventListener('blur', function() {
+                validateRespondentIds(this.value);
+            });
+
+            // Add step functionality
+            addStepBtn.addEventListener('click', function() {
+                if (stepCount >= maxSteps) {
+                    alert('Максимум 3 подпункта на цель');
+                    return;
+                }
+
+                const stepHtml = `
+                    <div class="card mb-2 step-item" data-step-index="${stepCount}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" name="Steps[${stepCount}].Title" 
+                                           class="form-control mb-2" placeholder="Название подпункта" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" name="Steps[${stepCount}].OrderIndex" 
+                                           class="form-control mb-2" value="${stepCount}" placeholder="Порядок" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-sm remove-step">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea name="Steps[${stepCount}].Description" 
+                                      class="form-control" rows="2" placeholder="Описание подпункта"></textarea>
+                        </div>
+                    </div>
+                `;
+
+                stepsContainer.insertAdjacentHTML('beforeend', stepHtml);
+                stepCount++;
+            });
+
+            // Remove step functionality
+            stepsContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-step')) {
+                    e.target.closest('.step-item').remove();
+                    stepCount--;
+                    reindexSteps();
+                }
+            });
+
+            // Form submission with validation
+            form.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Показываем информацию о создании самооценки
+                if (selfAssessmentCheckbox.checked) {
+                    console.log('Самооценка будет создана автоматически');
+                }
+                
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Создание...';
+                document.getElementById('submitBtn').disabled = true;
+            });
+        });
+
+        function validateRespondentIds(idsString) {
+            if (!idsString.trim()) {
+                showError('Введите ID респондентов');
+                return false;
+            }
+
+            const ids = idsString.split(',').map(id => id.trim()).filter(id => id !== '');
+            
+            // Проверка количества
+            if (ids.length > 5) {
+                showError('Максимум 5 респондентов');
+                return false;
+            }
+
+            // Проверка формата UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            
+            for (let id of ids) {
+                if (!uuidRegex.test(id)) {
+                    showError(`ID "${id}" неверный формат. Используйте UUID формат (например: a5232d2e-5413-490f-b391-9fd32ab110bd).`);
+                    return false;
+                }
+            }
+
+            clearError();
+            return true;
+        }
+
+        function showError(message) {
+            const input = document.getElementById('RespondentIdsInput');
+            const hiddenInput = document.getElementById('RespondentIds');
+            input.classList.add('is-invalid');
+            hiddenInput.classList.add('is-invalid');
+            
+            let errorDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                input.parentNode.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+        }
+
+        function clearError() {
+            const input = document.getElementById('RespondentIdsInput');
+            const hiddenInput = document.getElementById('RespondentIds');
+            input.classList.remove('is-invalid');
+            hiddenInput.classList.remove('is-invalid');
+            
+            const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+
+        function validateForm() {
+            const respondentIds = document.getElementById('RespondentIdsInput').value;
+            return validateRespondentIds(respondentIds);
+        }
+
+        function reindexSteps() {
+            const steps = document.querySelectorAll('.step-item');
+            steps.forEach((step, index) => {
+                step.setAttribute('data-step-index', index);
+                const inputs = step.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/Steps\[\d+\]/, `Steps[${index}]`));
+                    }
+                });
+            });
+            stepCount = steps.length;
+        }
+    </script>
+}

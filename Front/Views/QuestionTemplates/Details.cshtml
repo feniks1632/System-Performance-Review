@@ -1,0 +1,122 @@
+@using PerformanceReviewWeb.Models
+@model QuestionTemplateResponse
+@{
+    ViewData["Title"] = "Детали шаблона вопроса";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Детали шаблона вопроса
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Текст вопроса:</label>
+                                <p class="form-control-static">@Model.QuestionText</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Тип вопроса:</label>
+                                <span class="badge bg-info">@Model.QuestionType</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Раздел:</label>
+                                <p class="form-control-static">@(Model.Section ?? "-")</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Вес вопроса:</label>
+                                <span class="badge bg-primary">@Model.Weight</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Максимальный балл:</label>
+                                <span class="badge bg-success">@Model.MaxScore</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Порядковый номер:</label>
+                                <span class="badge bg-secondary">@Model.OrderIndex</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Триггерные слова:</label>
+                                <p class="form-control-static">@(Model.TriggerWords ?? "-")</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Требует оценки руководителя:</label>
+                                <span class="badge @(Model.RequiresManagerScoring ? "bg-warning" : "bg-secondary")">
+                                    @(Model.RequiresManagerScoring ? "Да" : "Нет")
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Статус:</label>
+                                <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                    @(Model.IsActive ? "Активен" : "Неактивен")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Options?.Any() == true)
+                    {
+                        <div class="mt-4">
+                            <h5>Опции для выбора:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Текст опции</th>
+                                            <th>Значение</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var option in Model.Options)
+                                        {
+                                            <tr>
+                                                <td>@option.Id</td>
+                                                <td>@option.Text</td>
+                                                <td><span class="badge bg-info">@option.Value</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mt-4">
+                        <label class="form-label fw-bold">Дата создания:</label>
+                        <p class="form-control-static">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/question-templates" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Назад к списку
+                        </a>
+                        <div>
+                            <a href="/question-templates/edit/@Model.Id" class="btn btn-warning me-2">
+                                <i class="fas fa-edit me-1"></i>Редактировать
+                            </a>
+                            <a href="/question-templates" class="btn btn-primary">
+                                <i class="fas fa-list me-1"></i>Все шаблоны
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

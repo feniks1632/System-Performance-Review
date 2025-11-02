@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "Performance Review System")</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/site.css" rel="stylesheet" />
+    
+    <!-- Render Styles section if defined -->
+    @await RenderSectionAsync("Styles", required: false)
+    
+    <style>
+        .navbar-brand { font-weight: bold; }
+        .sidebar { 
+            min-height: calc(100vh - 56px);
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid #dee2e6;
+            background: white;
+        }
+        .content-area { 
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 56px);
+        }
+        .goal-card { transition: transform 0.2s; }
+        .goal-card:hover { transform: translateY(-2px); }
+        .rating-A { background-color: #28a745 !important; color: white; }
+        .rating-B { background-color: #17a2b8 !important; color: white; }
+        .rating-C { background-color: #ffc107 !important; color: black; }
+        .rating-D { background-color: #dc3545 !important; color: white; }
+        .notification-item.unread { background-color: #f8f9fa; }
+        .user-profile-link { color: inherit; text-decoration: none; }
+        .user-profile-link:hover { color: inherit; }
+        
+        /* Стили для разделителя */
+        .section-divider {
+            border-top: 2px solid #dee2e6;
+            margin: 1rem 0;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            border-left: 3px solid #0d6efd;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    @{
+        var userObj = Context.Items["User"] as PerformanceReviewWeb.Models.UserResponse;
+        var isManager = userObj?.IsManager == true;
+        var fullName = userObj?.FullName ?? "Пользователь";
+        var userEmail = userObj?.Email ?? "";
+        var userId = userObj?.Id ?? "";
+    }
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Performance Review
+            </a>
+            
+            @if (Context.Items["User"] != null)
+            {
+                <div class="navbar-nav ms-auto">
+                    <!-- Только кнопка выхода -->
+                    <a class="nav-link text-white" href="/logout">
+                        <i class="fas fa-sign-out-alt me-1"></i>Выход
+                    </a>
+                </div>
+            }
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            @if (Context.Items["User"] != null)
+            {
+                <!-- Sidebar Navigation -->
+                <div class="col-md-3 col-lg-2 sidebar p-0">
+                    <!-- Основное содержимое сайдбара -->
+                    <div class="sidebar-content">
+                        <div class="list-group list-group-flush">
+                            <a href="/dashboard" class="list-group-item list-group-item-action border-0">
+                                <i class="fas fa-tachometer-alt me-2"></i>Дашборд
+                            </a>
+                            <a href="/goals" class="list-group-item list-group-item-action border-0">
+                                <i class="fas fa-bullseye me-2"></i>Мои цели
+                            </a>
+                            <a href="/goals/respondent" class="list-group-item list-group-item-action border-0">
+                                <i class="fas fa-user-check me-2"></i>Оценка коллег
+                            </a>
+                            <a href="/analytics" class="list-group-item list-group-item-action border-0">
+                                <i class="fas fa-chart-bar me-2"></i>Аналитика
+                            </a>
+                            <a href="/notifications" class="list-group-item list-group-item-action border-0 position-relative">
+                                <i class="fas fa-bell me-2"></i>Уведомления
+                                <span id="sidebarNotificationCount" class="badge bg-danger ms-2 d-none">0</span>
+                            </a>
+                            
+                            <!-- User Profile Quick Link -->
+                            <a href="/users/profile" class="list-group-item list-group-item-action border-0">
+                                <i class="fas fa-user me-2"></i>Мой профиль
+                            </a>
+                            
+                            @if (isManager)
+                            {
+                                <div class="list-group-item border-0 section-header text-muted small px-3 py-2">
+                                    <i class="fas fa-user-tie me-2"></i>УПРАВЛЕНИЕ
+                                </div>
+                                <a href="/users/subordinates" class="list-group-item list-group-item-action border-0">
+                                    <i class="fas fa-users me-2"></i>Мои подчиненные
+                                </a>
+                                <a href="/users/managers" class="list-group-item list-group-item-action border-0">
+                                    <i class="fas fa-user-tie me-2"></i>Руководители
+                                </a>
+                                <a href="/question-templates" class="list-group-item list-group-item-action border-0">
+                                    <i class="fas fa-question-circle me-2"></i>Шаблоны вопросов
+                                </a>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- User Info in Sidebar Footer -->
+                    <div class="sidebar-footer p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fw-bold small">@fullName</div>
+                                <div class="text-muted small">@userEmail</div>
+                                <div class="text-muted small">
+                                    @if (isManager)
+                                    {
+                                        <span class="badge bg-success">Руководитель</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary">Сотрудник</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="col-md-9 col-lg-10 content-area">
+                    <main role="main" class="p-4">
+                        <!-- Alert Messages -->
+                        <partial name="_Alert" />
+                        
+                        <!-- Page Content -->
+                        @RenderBody()
+                    </main>
+                </div>
+            }
+            else
+            {
+                <!-- Full width for unauthenticated users -->
+                <div class="col-12">
+                    <!-- Alert Messages for unauthenticated users -->
+                    <partial name="_Alert" />
+                    
+                    @RenderBody()
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        // Уведомления и SignalR
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotificationCount();
+            initializeSignalR();
+        });
+
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch('/notifications/unread-count');
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const notificationCount = data.count || 0;
+                updateNotificationBadges(notificationCount);
+            } catch (error) {
+                console.error('Error loading notification count:', error);
+            }
+        }
+
+        function updateNotificationBadges(count) {
+            const sidebarBadge = document.getElementById('sidebarNotificationCount');
+            
+            if (sidebarBadge) {
+                if (count > 0) {
+                    sidebarBadge.textContent = count > 99 ? '99+' : count;
+                    sidebarBadge.classList.remove('d-none');
+                } else {
+                    sidebarBadge.classList.add('d-none');
+                }
+            }
+        }
+
+        function initializeSignalR() {
+            try {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/notificationHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("ReceiveNotification", (title, message, type) => {
+                    showToastNotification(title, message, type);
+                    loadNotificationCount();
+                });
+
+                connection.on("UpdateUnreadCount", (count) => {
+                    updateNotificationBadges(count);
+                });
+
+                connection.start().catch(err => console.error('SignalR connection error:', err));
+            } catch (error) {
+                console.error('Error initializing SignalR:', error);
+            }
+        }
+
+        function showToastNotification(title, message, type) {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) return;
+
+            const toastId = 'toast-' + Date.now();
+            const bgClass = type === 'error' ? 'danger' : 
+                           type === 'warning' ? 'warning' : 
+                           type === 'info' ? 'info' : 'success';
+            
+            const icon = type === 'error' ? 'exclamation-circle' :
+                        type === 'warning' ? 'exclamation-triangle' :
+                        type === 'info' ? 'info-circle' : 'check-circle';
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast align-items-center text-bg-${bgClass} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${icon} me-2"></i>
+                        <strong>${escapeHtml(title)}</strong><br>
+                        ${escapeHtml(message)}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Auto-hide alerts after delay
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoHideAlerts = document.querySelectorAll('.alert.auto-hide');
+            autoHideAlerts.forEach(alert => {
+                const delay = alert.getAttribute('data-delay') || 5000;
+                setTimeout(() => {
+                    try {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    } catch (error) {
+                        console.error('Error closing alert:', error);
+                    }
+                }, delay);
+            });
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

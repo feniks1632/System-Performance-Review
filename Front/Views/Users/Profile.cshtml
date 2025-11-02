@@ -1,0 +1,202 @@
+@using PerformanceReviewWeb.Models
+@model UserProfileViewModel
+@{
+    ViewData["Title"] = "Профиль пользователя";
+    var currentUser = ViewBag.User as PerformanceReviewWeb.Models.UserResponse;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Профиль пользователя
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ФИО</label>
+                            <p class="form-control-plaintext fs-6">@Model.FullName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            <p class="form-control-plaintext fs-6">@Model.Email</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Роль</label>
+                            <p class="form-control-plaintext">
+                                @if (Model.IsManager)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-user-tie me-1"></i>Руководитель
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-user me-1"></i>Сотрудник
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Статус</label>
+                            <p class="form-control-plaintext">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Активен
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle me-1"></i>Неактивен
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ID пользователя</label>
+                            <p class="form-control-plaintext font-monospace small text-muted">@Model.Id</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Дата регистрации</label>
+                            <p class="form-control-plaintext">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Текущий руководитель</label>
+                            <div class="p-3 border rounded bg-light">
+                                @if (!string.IsNullOrEmpty(Model.ManagerName))
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-tie text-success me-3 fs-4"></i>
+                                        <div>
+                                            <span class="fw-bold fs-6">@Model.ManagerName</span>
+                                            <br>
+                                            <small class="text-muted">ID: @Model.ManagerId</small>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center text-muted py-2">
+                                        <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                        <p class="mb-0">Руководитель не назначен</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Убрана форма назначения руководителя -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-rocket me-2"></i>Быстрые действия
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Index", "Goals")" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-bullseye me-2"></i>Мои цели
+                        </a>
+                        <a href="@Url.Action("RespondentGoals", "Goals")" class="btn btn-outline-success text-start">
+                            <i class="fas fa-user-check me-2"></i>Оценка коллег
+                        </a>
+                        <a href="@Url.Action("Index", "Analytics")" class="btn btn-outline-info text-start">
+                            <i class="fas fa-chart-bar me-2"></i>Аналитика
+                        </a>
+                        
+                        @if (currentUser?.IsManager == true)
+                        {
+                            <hr class="my-2">
+                            <small class="text-muted fw-bold">Управление персоналом</small>
+                            <a href="@Url.Action("Subordinates", "Users")" class="btn btn-outline-warning text-start">
+                                <i class="fas fa-users me-2"></i>Мои подчиненные
+                            </a>
+                            <a href="@Url.Action("Managers", "Users")" class="btn btn-outline-secondary text-start">
+                                <i class="fas fa-user-tie me-2"></i>Все руководители
+                            </a>
+                            <a href="@Url.Action("Index", "QuestionTemplates")" class="btn btn-outline-dark text-start">
+                                <i class="fas fa-question-circle me-2"></i>Шаблоны вопросов
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Информация
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-user-circle fa-3x text-muted mb-3"></i>
+                        <h6>@Model.FullName</h6>
+                        <p class="text-muted small mb-2">@Model.Email</p>
+                        <p class="text-muted small">
+                            @if (Model.IsManager)
+                            {
+                                <span class="badge bg-success">Руководитель</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-primary">Сотрудник</span>
+                            }
+                        </p>
+                        <hr>
+                        <small class="text-muted">
+                            Зарегистрирован: @Model.CreatedAt.ToString("dd.MM.yyyy")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Простая функция для показа уведомлений (если нужно)
+        function showAlert(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+            
+            $('.container').prepend(alertHtml);
+            
+            // Автоматически скрыть через 5 секунд
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+
+        // Показываем сообщения из TempData если они есть
+        document.addEventListener('DOMContentLoaded', function() {
+            // Можно добавить логику для показа сообщений при необходимости
+        });
+    </script>
+}
