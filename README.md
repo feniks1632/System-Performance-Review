@@ -123,6 +123,7 @@ pytest --cov=app tests/
 
 Бэкенд API	http://localhost:8000
 Фронтенд	https://localhost:5001
+Админ Панель http://localhost:8000/admin/
 
 Документация	http://localhost:8000/docs
 🔧 Полезные команды
