@@ -19,72 +19,68 @@
                         <h6><i class="fas fa-info-circle me-2"></i>Информация об оценке</h6>
                         <p class="mb-1"><strong>ID оценки:</strong> @Model.ReviewId</p>
                         <p class="mb-1"><strong>Тип оценки:</strong> @Model.Review?.ReviewType</p>
-                        <p class="mb-0"><strong>Рассчитанный балл:</strong> @(Model.Review?.CalculatedScore?.ToString("F1") ?? "Не рассчитан")</p>
+                        <p class="mb-0"><strong>Сотрудник:</strong> @Model.EmployeeName</p>
                     </div>
 
                     <form method="post" action="/reviews/complete-manager/@Model.ReviewId" id="completeReviewForm">
                         @Html.AntiForgeryToken()
                         
                         <!-- Оценка вопросов руководителем -->
-                        @if (Model.PendingQuestions.Any())
+                        @if (Model.ManagerQuestions.Any())
                         {
                             <div class="card mb-4">
                                 <div class="card-header bg-warning text-dark">
                                     <h5 class="card-title mb-0">
                                         <i class="fas fa-user-tie me-2"></i>Оценка вопросов руководителем
+                                        <span class="badge bg-danger ms-2">Все вопросы обязательны</span>
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    @for (int i = 0; i < Model.PendingQuestions.Count; i++)
+                                    @for (int i = 0; i < Model.ManagerQuestions.Count; i++)
                                     {
-                                        var question = Model.PendingQuestions[i];
-                                        <div class="card mb-3">
+                                        var question = Model.ManagerQuestions[i];
+                                        <div class="card mb-3 question-card">
                                             <div class="card-body">
                                                 <input type="hidden" name="ManagerScores[@i].QuestionId" value="@question.QuestionId" />
                                                 
                                                 <h6 class="card-title">@question.QuestionText</h6>
                                                 
-                                                @if (!string.IsNullOrEmpty(question.Answer))
-                                                {
-                                                    <div class="alert alert-light mb-3">
-                                                        <strong>Ответ сотрудника:</strong>
-                                                        <p class="mb-0">@question.Answer</p>
-                                                    </div>
-                                                }
-                                                
-                                                @if (question.CurrentScore.HasValue)
-                                                {
-                                                    <div class="mb-2">
-                                                        <strong>Текущая оценка:</strong>
-                                                        <span class="badge bg-info">@question.CurrentScore.Value.ToString("F1")</span>
-                                                    </div>
-                                                }
-                                                
                                                 <div class="row">
                                                     <div class="col-md-6">
-                                                        <label class="form-label">Оценка руководителя (1-@question.MaxScore):</label>
-                                                        <select name="ManagerScores[@i].Score" class="form-select" required>
+                                                        <label class="form-label">Оценка (1-10) *</label>
+                                                        <select name="ManagerScores[@i].Score" class="form-select score-select" required>
                                                             <option value="">Выберите оценку</option>
-                                                            @for (int score = 1; score <= question.MaxScore; score++)
+                                                            @for (int score = 1; score <= 10; score++)
                                                             {
                                                                 <option value="@score">@score</option>
                                                             }
                                                         </select>
+                                                        <div class="invalid-feedback">Пожалуйста, выберите оценку</div>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label class="form-label">Комментарий (необязательно):</label>
+                                                        <label class="form-label">Комментарий:</label>
                                                         <textarea name="ManagerScores[@i].Answer" class="form-control" rows="2" 
-                                                                  placeholder="Дополнительный комментарий..."></textarea>
+                                                                  placeholder="Ваш комментарий к оценке..."></textarea>
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="mt-2 text-muted small">
-                                                    <span>Вес вопроса: @question.Weight</span>
-                                                </div>
+                                                <!-- Скрытое поле для selected_option -->
+                                                <input type="hidden" name="ManagerScores[@i].SelectedOption" value="" />
                                             </div>
                                         </div>
                                     }
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <strong>Внимание:</strong> Все вопросы должны быть оценены по 10-балльной шкале.
+                                    </div>
                                 </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Нет вопросов для оценки руководителем.
                             </div>
                         }
 
@@ -100,7 +96,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label class="form-label">Итоговый рейтинг *</label>
-                                            <select name="FinalReview.FinalRating" class="form-select" required>
+                                            <select name="FinalReview.FinalRating" class="form-select" id="finalRating" required>
                                                 <option value="">Выберите рейтинг</option>
                                                 <option value="excellent">Отлично</option>
                                                 <option value="good">Хорошо</option>
@@ -108,16 +104,16 @@
                                                 <option value="poor">Плохо</option>
                                                 <option value="unsatisfactory">Неудовлетворительно</option>
                                             </select>
-                                            <small class="text-muted">Общий рейтинг по результатам оценки</small>
+                                            <div class="invalid-feedback">Пожалуйста, выберите итоговый рейтинг</div>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label class="form-label">Итоговая обратная связь *</label>
-                                    <textarea name="FinalReview.FinalFeedback" class="form-control" rows="5" 
+                                    <textarea name="FinalReview.FinalFeedback" class="form-control" id="finalFeedback" rows="5" 
                                               placeholder="Опишите итоговую обратную связь для сотрудника..." required></textarea>
-                                    <small class="text-muted">Эта обратная связь будет видна сотруднику</small>
+                                    <div class="invalid-feedback">Пожалуйста, заполните итоговую обратную связь</div>
                                 </div>
                             </div>
                         </div>
@@ -139,11 +135,29 @@
 
 @section Scripts {
     <script>
+        // JavaScript остается таким же как в предыдущем варианте
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('completeReviewForm');
+            const submitBtn = document.getElementById('submitCompleteBtn');
             
             form.addEventListener('submit', function(e) {
-                const submitBtn = document.getElementById('submitCompleteBtn');
+                const scoreSelects = form.querySelectorAll('.score-select');
+                let isValid = true;
+                
+                // Проверка оценок
+                scoreSelects.forEach(select => {
+                    if (!select.value) {
+                        isValid = false;
+                        select.classList.add('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Пожалуйста, оцените все вопросы');
+                    return;
+                }
+                
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Завершение...';
                 submitBtn.disabled = true;
             });

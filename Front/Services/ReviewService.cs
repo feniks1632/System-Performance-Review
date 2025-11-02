@@ -198,24 +198,37 @@ namespace PerformanceReviewWeb.Services
             {
                 Console.WriteLine($"[ReviewService] Scoring {scores.Count} manager questions for review: {reviewId}");
 
-                // Преобразуем AnswerModel в формат для API
-                var requestData = scores.Select(score => new Dictionary<string, object>
-                {
-                    ["question_id"] = score.QuestionId,
-                    ["score"] = score.Score ?? 0,
-                    ["answer"] = score.Answer ?? string.Empty,
-                    ["selected_option"] = score.SelectedOption ?? string.Empty
-                }).ToList();
+                // Преобразуем AnswerModel в формат для API руководителя
+                var requestData = scores.Where(score => score.Score.HasValue)
+                                       .Select(score => new Dictionary<string, object>
+                                       {
+                                           ["question_id"] = score.QuestionId,
+                                           ["score"] = score.Score.Value, // Обязательная оценка 1-10
+                                           ["answer"] = score.Answer ?? string.Empty, // Комментарий руководителя
+                                           ["selected_option"] = score.SelectedOption ?? string.Empty
+                                       }).ToList();
 
-                var result = await _apiService.PostAsync<SuccessResponse>($"reviews/{reviewId}/score-manager-questions", requestData);
+                if (!requestData.Any())
+                {
+                    Console.WriteLine($"[ReviewService] No valid scores to send for review {reviewId}");
+                    return new SuccessResponse { Status = "success", Message = "No scores to update" };
+                }
+
+                Console.WriteLine($"[ReviewService] Sending {requestData.Count} manager scores to API");
+
+                // Используем правильный endpoint из спецификации API
+                var result = await _apiService.PostAsync<SuccessResponse>(
+                    $"/api/v1/reviews/{reviewId}/score-manager-questions",
+                    requestData
+                );
 
                 if (result != null)
                 {
-                    Console.WriteLine($"[ReviewService] Successfully scored manager questions for review {reviewId}");
+                    Console.WriteLine($"[ReviewService] Successfully scored manager questions for review {reviewId}: {result.Status} - {result.Message}");
                 }
                 else
                 {
-                    Console.WriteLine($"[ReviewService] Failed to score manager questions for review {reviewId}");
+                    Console.WriteLine($"[ReviewService] Failed to score manager questions for review {reviewId} - null response");
                 }
 
                 return result;
@@ -223,7 +236,7 @@ namespace PerformanceReviewWeb.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[ReviewService] Error scoring manager questions for {reviewId}: {ex.Message}");
-                return null;
+                return new SuccessResponse { Status = "error", Message = ex.Message };
             }
         }
 

@@ -33,7 +33,6 @@ namespace PerformanceReviewWeb.Controllers
 
             var user = _authService.GetCurrentUser();
 
-            // ПРОВЕРКА ПРАВ ДОСТУПА ДЛЯ ОЦЕНКИ ПОТЕНЦИАЛА
             if (reviewType.ToLower() == "potential" && user?.IsManager != true)
             {
                 TempData["Error"] = "Оценка потенциала доступна только руководителям";
@@ -46,7 +45,6 @@ namespace PerformanceReviewWeb.Controllers
                 return RedirectToAction("Details", "Goals", new { id = goalId });
             }
 
-            // Исправлено: правильное преобразование типа оценки
             if (!Enum.TryParse<ReviewType>(reviewType, true, out var reviewTypeEnum))
             {
                 TempData["Error"] = "Неверный тип оценки";
@@ -85,8 +83,6 @@ namespace PerformanceReviewWeb.Controllers
             var user = _authService.GetCurrentUser();
             var reviews = await _reviewService.GetReviewsAsync();
 
-            // Для сотрудника: показываем завершенные оценки его целей
-            // Для руководителя: показываем все завершенные оценки
             var completedReviews = reviews?
                 .Where(r => !string.IsNullOrEmpty(r.FinalRating) &&
                            (user?.IsManager == true || r.ReviewerId == user?.Id))
@@ -126,7 +122,6 @@ namespace PerformanceReviewWeb.Controllers
 
             try
             {
-                // Фильтруем пустые ответы
                 createModel.Answers = createModel.Answers?
                     .Where(a => !string.IsNullOrEmpty(a.Answer) || a.Score.HasValue || !string.IsNullOrEmpty(a.SelectedOption))
                     .ToList() ?? new List<AnswerModel>();
@@ -134,14 +129,12 @@ namespace PerformanceReviewWeb.Controllers
                 var review = await _reviewService.CreateReviewAsync(createModel);
                 if (review != null)
                 {
-                    // Если это оценка руководителя или потенциала - перенаправляем на завершение
                     if ((createModel.ReviewType == ReviewType.Manager || createModel.ReviewType == ReviewType.Potential) && user?.IsManager == true)
                     {
-                        TempData["Success"] = "Оценка создана. Теперь завершите её.";
-                        return RedirectToAction("CompleteManagerReview", new { id = review.Id });
+                        TempData["Success"] = "Оценка создана. Теперь завершите оценку.";
+                        return RedirectToAction("CompleteManager", new { id = review.Id });
                     }
 
-                    // Для самооценки - показываем аналитику
                     if (createModel.ReviewType == ReviewType.Self)
                     {
                         TempData["Success"] = "Самооценка успешно создана";
@@ -160,7 +153,6 @@ namespace PerformanceReviewWeb.Controllers
                 TempData["Error"] = "Произошла ошибка при создании оценки";
             }
 
-            // Возврат с ошибкой
             var errorQuestions = await _reviewService.GetQuestionTemplatesAsync(createModel.ReviewType.ToString().ToLower());
             var errorViewModel = new ReviewCreateViewModel
             {
@@ -192,32 +184,172 @@ namespace PerformanceReviewWeb.Controllers
             return View(review);
         }
 
-        [HttpPost("{id}/final")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinalizeReview(string id, FinalReviewUpdateModel updateModel)
-        {
-            if (!_authService.IsAuthenticated())
-                return Json(new { success = false, message = "Не авторизован" });
-
-            var user = _authService.GetCurrentUser();
-            if (user?.IsManager != true)
-                return Json(new { success = false, message = "Только руководители могут завершать оценки" });
-
-            var result = await _reviewService.UpdateFinalReviewAsync(id, updateModel);
-            return Json(new { 
-                success = result != null, 
-                message = result != null ? "Оценка завершена" : "Ошибка при завершении оценки" 
-            });
-        }
-
-        [HttpGet("{id}/pending-manager-scores")]
-        public async Task<IActionResult> PendingManagerScores(string id)
+        [HttpGet("complete-manager/{id}")]
+        public async Task<IActionResult> CompleteManager(string id)
         {
             if (!_authService.IsAuthenticated() || _authService.GetCurrentUser()?.IsManager != true)
-                return Json(new { success = false, message = "Не авторизован" });
+            {
+                TempData["Error"] = "Доступ разрешен только руководителям";
+                return RedirectToAction("Login", "Home");
+            }
 
-            var pendingScores = await _reviewService.GetPendingManagerScoresAsync(id);
-            return Json(new { success = true, data = pendingScores });
+            try
+            {
+                // 1. Получаем только базовую информацию об оценке (БЕЗ ответов сотрудника)
+                var review = await _reviewService.GetReviewAsync(id);
+                if (review == null)
+                {
+                    TempData["Error"] = "Оценка не найдена";
+                    return RedirectToAction("PendingManagerReviews");
+                }
+
+                // 2. Получаем информацию о цели
+                var goal = await _apiService.GetAsync<GoalResponse>($"goals/{review.GoalId}");
+
+                // 3. Получаем вопросы ДЛЯ РУКОВОДИТЕЛЯ (без ответов сотрудника!)
+                var managerQuestions = await GetManagerQuestionsAsync(review.ReviewType);
+
+                var model = new ManagerScoringViewModel
+                {
+                    ReviewId = id,
+                    Review = review,
+                    GoalId = review.GoalId,
+                    GoalTitle = goal?.Title ?? "Неизвестная цель",
+                    EmployeeName = await GetEmployeeNameAsync(goal),
+                    ManagerQuestions = managerQuestions, // Используем ManagerQuestions вместо PendingQuestions
+                    ManagerScores = InitializeManagerScores(managerQuestions),
+                    FinalReview = new FinalReviewUpdateModel()
+                };
+
+                ViewBag.User = _authService.GetCurrentUser();
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ReviewsController] Error loading review {id}: {ex.Message}");
+                TempData["Error"] = "Ошибка при загрузке оценки";
+                return RedirectToAction("PendingManagerReviews");
+            }
+        }
+
+        private async Task<List<ManagerQuestion>> GetManagerQuestionsAsync(ReviewType reviewType)
+        {
+            // Получаем вопросы из шаблонов для руководителя
+            var questionTemplates = await _reviewService.GetQuestionTemplatesAsync(
+                questionType: reviewType.ToString().ToLower(),
+                section: "manager" // или другой критерий для вопросов руководителя
+            );
+
+            // Если не нашли по section "manager", берем все вопросы для этого типа оценки
+            if (!questionTemplates.Any())
+            {
+                questionTemplates = await _reviewService.GetQuestionTemplatesAsync(
+                    questionType: reviewType.ToString().ToLower()
+                );
+            }
+
+            return questionTemplates.Select(q => new ManagerQuestion
+            {
+                QuestionId = q.Id,
+                QuestionText = q.QuestionText,
+                // Используем проверку на 0 или отрицательные значения вместо ??
+                MaxScore = q.MaxScore > 0 ? q.MaxScore : 10, // Если MaxScore <= 0, используем 10
+                Weight = q.Weight > 0 ? q.Weight : 1.0 // Если Weight <= 0, используем 1.0
+            }).ToList();
+        }
+
+        // Вспомогательный метод для получения имени сотрудника
+        private async Task<string> GetEmployeeNameAsync(GoalResponse? goal)
+        {
+            if (goal == null) return "Неизвестный сотрудник";
+
+            if (!string.IsNullOrEmpty(goal.EmployeeId))
+            {
+                try
+                {
+                    var employee = await _apiService.GetAsync<UserResponse>($"users/{goal.EmployeeId}");
+                    return employee?.FullName ?? goal.EmployeeName ?? "Неизвестный сотрудник";
+                }
+                catch
+                {
+                    return goal?.EmployeeName ?? "Неизвестный сотрудник";
+                }
+            }
+
+            return goal?.EmployeeName ?? "Неизвестный сотрудник";
+        }
+
+        [HttpPost("complete-manager/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteManager(string id, ManagerScoringViewModel model)
+        {
+            if (!_authService.IsAuthenticated() || _authService.GetCurrentUser()?.IsManager != true)
+            {
+                TempData["Error"] = "Доступ разрешен только руководителям";
+                return RedirectToAction("Login", "Home");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await ReloadManagerScoringModel(id, model);
+                ViewBag.User = _authService.GetCurrentUser();
+                TempData["Error"] = "Пожалуйста, заполните все обязательные поля";
+                return View("CompleteManager", model);
+            }
+
+            try
+            {
+                // 1. Проверяем, что есть оценки для отправки
+                var scoresToSave = model.ManagerScores?
+                    .Where(score => score.Score.HasValue && !string.IsNullOrEmpty(score.QuestionId))
+                    .ToList() ?? new List<AnswerModel>();
+
+                if (!scoresToSave.Any())
+                {
+                    TempData["Warning"] = "Не выбраны оценки для вопросов";
+                    await ReloadManagerScoringModel(id, model);
+                    ViewBag.User = _authService.GetCurrentUser();
+                    return View("CompleteManager", model);
+                }
+
+                // 2. Отправляем оценки через API руководителя
+                var scoreResult = await _reviewService.ScoreManagerQuestionsAsync(id, scoresToSave);
+
+                if (scoreResult?.Status != "success")
+                {
+                    Console.WriteLine($"[ReviewsController] Manager scoring API returned: {scoreResult?.Status} - {scoreResult?.Message}");
+                    // Не прерываем процесс, но логируем предупреждение
+                    TempData["Warning"] = "Оценки вопросов сохранены с предупреждениями";
+                }
+                else
+                {
+                    Console.WriteLine($"[ReviewsController] Manager scores successfully saved for review {id}");
+                }
+
+                // 3. Завершаем оценку (финальный рейтинг и обратная связь)
+                var finalResult = await _reviewService.UpdateFinalReviewAsync(id, model.FinalReview);
+
+                if (finalResult != null)
+                {
+                    TempData["Success"] = "Оценка успешно завершена";
+                    return RedirectToAction("GoalAnalytics", "Analytics", new { goalId = finalResult.GoalId });
+                }
+                else
+                {
+                    await ReloadManagerScoringModel(id, model);
+                    ViewBag.User = _authService.GetCurrentUser();
+                    TempData["Error"] = "Ошибка при завершении оценки";
+                    return View("CompleteManager", model);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ReviewsController] Error completing review {id}: {ex.Message}");
+                await ReloadManagerScoringModel(id, model);
+                ViewBag.User = _authService.GetCurrentUser();
+                TempData["Error"] = $"Ошибка при завершении оценки: {ex.Message}";
+                return View("CompleteManager", model);
+            }
         }
 
         [HttpGet("pending-manager")]
@@ -243,141 +375,6 @@ namespace PerformanceReviewWeb.Controllers
             }
         }
 
-        [HttpGet("complete-manager/{id}")]
-        public async Task<IActionResult> CompleteManagerReview(string id)
-        {
-            if (!_authService.IsAuthenticated() || _authService.GetCurrentUser()?.IsManager != true)
-            {
-                TempData["Error"] = "Доступ разрешен только руководителям";
-                return RedirectToAction("Login", "Home");
-            }
-
-            try
-            {
-                var review = await _reviewService.GetReviewAsync(id);
-                if (review == null)
-                {
-                    TempData["Error"] = "Оценка не найдена";
-                    return RedirectToAction("PendingManagerReviews");
-                }
-
-                var pendingQuestionsData = await _reviewService.GetPendingManagerScoresAsync(id);
-                var pendingQuestions = ParsePendingQuestions(pendingQuestionsData);
-
-                var model = new ManagerScoringViewModel
-                {
-                    ReviewId = id,
-                    Review = review,
-                    PendingQuestions = pendingQuestions,
-                    FinalReview = new FinalReviewUpdateModel(),
-                    ManagerScores = InitializeManagerScores(pendingQuestions)
-                };
-
-                ViewBag.User = _authService.GetCurrentUser();
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ReviewsController] Error loading review {id}: {ex.Message}");
-                TempData["Error"] = "Ошибка при загрузке оценки";
-                return RedirectToAction("PendingManagerReviews");
-            }
-        }
-
-        [HttpPost("complete-manager/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CompleteManagerReview(string id, ManagerScoringViewModel model)
-        {
-            if (!_authService.IsAuthenticated() || _authService.GetCurrentUser()?.IsManager != true)
-            {
-                TempData["Error"] = "Доступ разрешен только руководителям";
-                return RedirectToAction("Login", "Home");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                // Перезагружаем данные для формы
-                var review = await _reviewService.GetReviewAsync(id);
-                var pendingQuestionsData = await _reviewService.GetPendingManagerScoresAsync(id);
-                var pendingQuestions = ParsePendingQuestions(pendingQuestionsData);
-
-                model.Review = review;
-                model.PendingQuestions = pendingQuestions;
-                model.ManagerScores = InitializeManagerScores(pendingQuestions);
-
-                ViewBag.User = _authService.GetCurrentUser();
-                TempData["Error"] = "Пожалуйста, заполните все обязательные поля";
-                return View(model);
-            }
-
-            try
-            {
-                // Сохраняем оценки руководителя
-                var scoresToSave = model.ManagerScores?
-                    .Where(score => score.Score.HasValue && !string.IsNullOrEmpty(score.QuestionId))
-                    .ToList() ?? new List<AnswerModel>();
-
-                if (scoresToSave.Any())
-                {
-                    var scoreResult = await _reviewService.ScoreManagerQuestionsAsync(id, scoresToSave);
-                    if (scoreResult == null)
-                    {
-                        TempData["Warning"] = "Оценки не были сохранены";
-                    }
-                }
-
-                // Завершаем оценку через API
-                var result = await _reviewService.UpdateFinalReviewAsync(id, model.FinalReview);
-
-                if (result != null)
-                {
-                    TempData["Success"] = "Оценка успешно завершена";
-
-                    // Перенаправляем на аналитику цели
-                    return RedirectToAction("GoalAnalytics", "Analytics", new { goalId = result.GoalId });
-                }
-                else
-                {
-                    TempData["Error"] = "Ошибка при завершении оценки";
-                    return RedirectToAction("CompleteManagerReview", new { id });
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ReviewsController] Error completing review {id}: {ex.Message}");
-                TempData["Error"] = $"Ошибка при завершении оценки: {ex.Message}";
-                return RedirectToAction("CompleteManagerReview", new { id });
-            }
-        }
-
-        [HttpPost("{id}/score-manager-questions")]
-        public async Task<IActionResult> ScoreManagerQuestions(string id, List<ManagerScoreRequest> scores)
-        {
-            if (!_authService.IsAuthenticated() || _authService.GetCurrentUser()?.IsManager != true)
-                return Json(new { success = false, message = "Не авторизован" });
-
-            try
-            {
-                var answerModels = scores.Select(score => new AnswerModel
-                {
-                    QuestionId = score.QuestionId,
-                    Score = score.Score,
-                    Answer = score.Feedback
-                }).ToList();
-
-                var result = await _reviewService.ScoreManagerQuestionsAsync(id, answerModels);
-                return Json(new { 
-                    success = result != null, 
-                    message = result != null ? "Оценки сохранены" : "Ошибка при сохранении оценок" 
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ReviewsController] Error scoring questions for {id}: {ex.Message}");
-                return Json(new { success = false, message = $"Ошибка: {ex.Message}" });
-            }
-        }
-
         [HttpGet("self-assessments")]
         public async Task<IActionResult> SelfAssessments()
         {
@@ -395,47 +392,108 @@ namespace PerformanceReviewWeb.Controllers
             return View(selfAssessments);
         }
 
-        private List<PendingQuestion> ParsePendingQuestions(List<Dictionary<string, object>>? pendingData)
+        private async Task ReloadManagerScoringModel(string id, ManagerScoringViewModel model)
+        {
+            try
+            {
+                // Используем GetReviewAsync вместо GetReviewWithAnswersAsync
+                var review = await _reviewService.GetReviewAsync(id);
+                if (review == null) return;
+
+                model.Review = review;
+                model.GoalId = review.GoalId;
+
+                var goal = await _apiService.GetAsync<GoalResponse>($"goals/{review.GoalId}");
+                model.GoalTitle = goal?.Title ?? "Неизвестная цель";
+
+                string employeeName = "Неизвестный сотрудник";
+                if (!string.IsNullOrEmpty(goal?.EmployeeId))
+                {
+                    try
+                    {
+                        var employee = await _apiService.GetAsync<UserResponse>($"users/{goal.EmployeeId}");
+                        employeeName = employee?.FullName ?? goal.EmployeeName ?? "Неизвестный сотрудник";
+                    }
+                    catch
+                    {
+                        employeeName = goal?.EmployeeName ?? "Неизвестный сотрудник";
+                    }
+                }
+                model.EmployeeName = employeeName;
+
+                // Получаем вопросы руководителя заново
+                var managerQuestions = await GetManagerQuestionsAsync(review.ReviewType);
+                model.ManagerQuestions = managerQuestions;
+
+                if (model.ManagerScores == null || !model.ManagerScores.Any())
+                {
+                    model.ManagerScores = InitializeManagerScores(managerQuestions);
+                }
+
+                if (model.FinalReview == null)
+                {
+                    model.FinalReview = new FinalReviewUpdateModel();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ReviewsController] Error reloading model: {ex.Message}");
+            }
+        }
+
+        private List<PendingQuestion> ExtractPendingQuestionsFromReview(ReviewResponseWithAnswers review)
         {
             var questions = new List<PendingQuestion>();
 
-            if (pendingData == null) return questions;
+            List<Dictionary<string, object>>? answers = review.ReviewType switch
+            {
+                ReviewType.Manager => review.ManagerEvaluationAnswers,
+                ReviewType.Potential => review.PotentialEvaluationAnswers,
+                _ => null
+            };
 
-            foreach (var item in pendingData)
+            if (answers == null) return questions;
+
+            foreach (var answer in answers)
             {
                 var question = new PendingQuestion();
-                
-                if (item.TryGetValue("question_id", out var questionId))
+
+                if (answer.TryGetValue("question_id", out var questionId))
                     question.QuestionId = questionId?.ToString() ?? string.Empty;
-                
-                if (item.TryGetValue("question_text", out var questionText))
+
+                if (answer.TryGetValue("question_text", out var questionText))
                     question.QuestionText = questionText?.ToString() ?? "Неизвестный вопрос";
-                
-                if (item.TryGetValue("answer", out var answer))
-                    question.Answer = answer?.ToString();
-                
-                if (item.TryGetValue("current_score", out var currentScore) && currentScore != null)
+
+                if (answer.TryGetValue("answer", out var answerText))
+                    question.Answer = answerText?.ToString();
+
+                if (answer.TryGetValue("score", out var scoreObj) && scoreObj != null)
                 {
-                    if (double.TryParse(currentScore.ToString(), out double score))
+                    if (double.TryParse(scoreObj.ToString(), out double score))
                         question.CurrentScore = score;
                 }
-                
-                if (item.TryGetValue("question_type", out var questionType))
-                    question.QuestionType = questionType?.ToString();
-                
-                if (item.TryGetValue("weight", out var weight) && weight != null)
+
+                if (answer.TryGetValue("weight", out var weightObj) && weightObj != null)
                 {
-                    if (double.TryParse(weight.ToString(), out double weightValue))
-                        question.Weight = weightValue;
+                    if (double.TryParse(weightObj.ToString(), out double weight))
+                        question.Weight = weight;
                 }
-                
-                if (item.TryGetValue("max_score", out var maxScore) && maxScore != null)
+                else
                 {
-                    if (int.TryParse(maxScore.ToString(), out int maxScoreValue))
-                        question.MaxScore = maxScoreValue;
+                    question.Weight = 1.0;
                 }
-                
-                if (item.TryGetValue("section", out var section))
+
+                if (answer.TryGetValue("max_score", out var maxScoreObj) && maxScoreObj != null)
+                {
+                    if (int.TryParse(maxScoreObj.ToString(), out int maxScore))
+                        question.MaxScore = maxScore;
+                }
+                else
+                {
+                    question.MaxScore = 10;
+                }
+
+                if (answer.TryGetValue("section", out var section))
                     question.Section = section?.ToString();
 
                 questions.Add(question);
@@ -444,13 +502,14 @@ namespace PerformanceReviewWeb.Controllers
             return questions;
         }
 
-        private List<AnswerModel> InitializeManagerScores(List<PendingQuestion> pendingQuestions)
+        private List<AnswerModel> InitializeManagerScores(List<ManagerQuestion> managerQuestions)
         {
-            return pendingQuestions.Select(q => new AnswerModel
+            return managerQuestions.Select(q => new AnswerModel
             {
                 QuestionId = q.QuestionId,
                 Score = null,
-                Answer = null
+                Answer = null,
+                SelectedOption = null
             }).ToList();
         }
     }

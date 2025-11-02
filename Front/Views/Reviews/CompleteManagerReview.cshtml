@@ -1,3 +1,4 @@
+@using PerformanceReviewWeb.Models
 @model PerformanceReviewWeb.Models.ManagerScoringViewModel
 @{
     ViewData["Title"] = "Завершение оценки";
@@ -53,7 +54,7 @@
                                         }
                                     </p>
                                     <p class="mb-1"><strong>Вопросов для оценки:</strong> 
-                                        <span class="badge bg-warning text-dark">@Model.PendingQuestions.Count</span>
+                                        <span class="badge bg-warning text-dark">@Model.ManagerQuestions.Count</span>
                                     </p>
                                     <p class="mb-0"><strong>Дата создания:</strong> @Model.Review?.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
                                 </div>
@@ -62,7 +63,7 @@
                     </div>
 
                     <!-- Вопросы, ожидающие оценку руководителя -->
-                    @if (Model.PendingQuestions.Any())
+                    @if (Model.ManagerQuestions.Any())
                     {
                         <div class="card mb-4">
                             <div class="card-header bg-warning text-dark">
@@ -72,30 +73,17 @@
                             </div>
                             <div class="card-body">
                                 <form id="managerScoresForm">
-                                    @for (int i = 0; i < Model.PendingQuestions.Count; i++)
+                                    @for (int i = 0; i < Model.ManagerQuestions.Count; i++)
                                     {
-                                        var question = Model.PendingQuestions[i];
+                                        var question = Model.ManagerQuestions[i];
                                         <div class="card mb-3">
                                             <div class="card-header bg-light">
                                                 <h6 class="mb-0">@question.QuestionText</h6>
                                                 <small class="text-muted">Вес: @question.Weight</small>
                                             </div>
                                             <div class="card-body">
-                                                @if (!string.IsNullOrEmpty(question.Answer))
-                                                {
-                                                    <div class="mb-3">
-                                                        <strong>Ответ сотрудника:</strong>
-                                                        <p class="mt-1 p-2 bg-light rounded">@question.Answer</p>
-                                                    </div>
-                                                }
-                                                
-                                                @if (question.CurrentScore.HasValue)
-                                                {
-                                                    <div class="mb-3">
-                                                        <strong>Текущая оценка:</strong>
-                                                        <span class="badge bg-info ms-2">@question.CurrentScore.Value.ToString("F1")</span>
-                                                    </div>
-                                                }
+                                                <!-- УБИРАЕМ блок с ответом сотрудника -->
+                                                <!-- УБИРАЕМ блок с текущей оценкой -->
 
                                                 <div class="form-group">
                                                     <label for="score-@i" class="form-label">Ваша оценка (1-@question.MaxScore):</label>
@@ -122,6 +110,13 @@
                             </div>
                         </div>
                     }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Нет вопросов для оценки руководителем.
+                        </div>
+                    }
 
                     <!-- Завершение оценки -->
                     <div class="card">
@@ -132,11 +127,22 @@
                         </div>
                         <div class="card-body">
                             <form method="post" action="/reviews/complete-manager/@Model.ReviewId" id="finalReviewForm">
+                                @Html.AntiForgeryToken()
+                                
+                                <!-- Скрытые поля для оценок -->
+                                @for (int i = 0; i < Model.ManagerQuestions.Count; i++)
+                                {
+                                    <input type="hidden" name="ManagerScores[@i].QuestionId" value="@Model.ManagerQuestions[i].QuestionId" />
+                                    <input type="hidden" name="ManagerScores[@i].Score" id="hidden-score-@i" value="" />
+                                    <input type="hidden" name="ManagerScores[@i].Answer" value="" />
+                                    <input type="hidden" name="ManagerScores[@i].SelectedOption" value="" />
+                                }
+                                
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="FinalRating" class="form-label">Итоговый рейтинг *</label>
-                                            <select asp-for="FinalReview.FinalRating" class="form-control" required>
+                                            <select name="FinalReview.FinalRating" class="form-control" required>
                                                 <option value="">Выберите рейтинг</option>
                                                 <option value="excellent">Отлично</option>
                                                 <option value="good">Хорошо</option>
@@ -144,16 +150,14 @@
                                                 <option value="needs_improvement">Требует улучшения</option>
                                                 <option value="poor">Неудовлетворительно</option>
                                             </select>
-                                            <span asp-validation-for="FinalReview.FinalRating" class="text-danger"></span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="FinalFeedback" class="form-label">Итоговая обратная связь *</label>
-                                            <textarea asp-for="FinalReview.FinalFeedback" class="form-control" 
+                                            <textarea name="FinalReview.FinalFeedback" class="form-control" 
                                                       rows="4" placeholder="Напишите итоговую обратную связь для сотрудника..." 
                                                       required></textarea>
-                                            <span asp-validation-for="FinalReview.FinalFeedback" class="text-danger"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -185,7 +189,7 @@
                 
                 let hasErrors = false;
                 
-                scoreInputs.forEach(input => {
+                scoreInputs.forEach((input, index) => {
                     const score = parseFloat(input.value);
                     const questionId = input.getAttribute('data-question-id');
                     
@@ -194,6 +198,12 @@
                             questionId: questionId,
                             score: score
                         });
+                        
+                        // Сохраняем оценку в скрытое поле
+                        const hiddenInput = document.getElementById('hidden-score-' + index);
+                        if (hiddenInput) {
+                            hiddenInput.value = score;
+                        }
                     } else if (input.value.trim() !== '') {
                         hasErrors = true;
                         input.classList.add('is-invalid');
@@ -216,19 +226,30 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Сохранение...';
                 btn.disabled = true;
                 
-                fetch('/reviews/@Model.ReviewId/score-manager-questions', {
+                // Отправляем оценки через API
+                fetch('/api/v1/reviews/@Model.ReviewId/score-manager-questions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(scores)
+                    body: JSON.stringify(scores.map(score => ({
+                        question_id: score.questionId,
+                        score: score.score,
+                        answer: "", // Пустой комментарий
+                        selected_option: ""
+                    })))
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка сети');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success) {
+                    if (data.status === 'success') {
                         alert('Оценки успешно сохранены!');
                     } else {
-                        alert('Ошибка: ' + data.message);
+                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
                     }
                 })
                 .catch(error => {
@@ -242,12 +263,27 @@
             
             // Валидация формы завершения
             document.getElementById('finalReviewForm').addEventListener('submit', function(e) {
-                const finalRating = document.getElementById('FinalRating').value;
-                const finalFeedback = document.getElementById('FinalFeedback').value;
+                const finalRating = document.querySelector('select[name="FinalReview.FinalRating"]').value;
+                const finalFeedback = document.querySelector('textarea[name="FinalReview.FinalFeedback"]').value;
                 
-                if (!finalRating || !finalFeedback.trim()) {
+                // Проверяем, что все оценки заполнены
+                const scoreInputs = document.querySelectorAll('.manager-score');
+                let allScoresFilled = true;
+                
+                scoreInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        allScoresFilled = false;
+                        input.classList.add('is-invalid');
+                    }
+                });
+                
+                if (!allScoresFilled || !finalRating || !finalFeedback.trim()) {
                     e.preventDefault();
-                    alert('Пожалуйста, заполните все обязательные поля для завершения оценки.');
+                    if (!allScoresFilled) {
+                        alert('Пожалуйста, заполните все оценки перед завершением.');
+                    } else {
+                        alert('Пожалуйста, заполните все обязательные поля для завершения оценки.');
+                    }
                     return;
                 }
                 
@@ -273,6 +309,13 @@
                         this.classList.add('is-invalid');
                     }
                 });
+                
+                // Снимаем ошибку при вводе
+                input.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
             });
         });
     </script>
@@ -284,6 +327,10 @@
         
         .card {
             margin-bottom: 1rem;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545;
         }
     </style>
 }

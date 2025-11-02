@@ -164,10 +164,25 @@ namespace PerformanceReviewWeb.Models
     public class ManagerScoringViewModel
     {
         public string ReviewId { get; set; } = string.Empty;
+        public string GoalId { get; set; } = string.Empty;
+        public string GoalTitle { get; set; } = string.Empty;
+        public string EmployeeName { get; set; } = string.Empty;
         public ReviewResponse? Review { get; set; }
-        public List<PendingQuestion> PendingQuestions { get; set; } = new List<PendingQuestion>();
-        public FinalReviewUpdateModel FinalReview { get; set; } = new FinalReviewUpdateModel();
+
+        // ЗАМЕНЯЕМ PendingQuestions на ManagerQuestions
+        public List<ManagerQuestion> ManagerQuestions { get; set; } = new List<ManagerQuestion>();
+
         public List<AnswerModel> ManagerScores { get; set; } = new List<AnswerModel>();
+        public FinalReviewUpdateModel FinalReview { get; set; } = new FinalReviewUpdateModel();
+    }
+
+
+    public class ManagerQuestion
+    {
+        public string QuestionId { get; set; } = string.Empty;
+        public string QuestionText { get; set; } = string.Empty;
+        public int MaxScore { get; set; } = 10; // Всегда 10-балльная система
+        public double Weight { get; set; } = 1.0;
     }
 
     public class PendingQuestion
