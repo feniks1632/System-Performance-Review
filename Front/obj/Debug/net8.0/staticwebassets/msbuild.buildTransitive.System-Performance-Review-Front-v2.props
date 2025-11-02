@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/System-Performance-Review-Front-v2.props" />
-</Project>

@@ -450,6 +450,8 @@ async def score_manager_questions(
             )
 
     # Обновляем оценки в соответствующих полях
+    answers_data = None  # Инициализируем переменную
+    
     if review.review_type == ReviewType.SELF and review.self_evaluation_answers:  # type: ignore
         answers_data = json.loads(review.self_evaluation_answers)  # type: ignore
         for score_data in scores:
@@ -458,16 +460,31 @@ async def score_manager_questions(
                     answer["score"] = score_data.score
         review.self_evaluation_answers = json.dumps(answers_data)  # type: ignore
 
-    elif review.review_type == ReviewType.RESPONDENT and hasattr(review, "answers"):  # type: ignore
-        answers_data = json.loads(review.answers)  # type: ignore
+    elif review.review_type == ReviewType.MANAGER and review.manager_evaluation_answers:  # type: ignore
+        answers_data = json.loads(review.manager_evaluation_answers)  # type: ignore
         for score_data in scores:
             for answer in answers_data:
                 if answer.get("question_id") == score_data.question_id:
-                    answer["score"] = score_data.score  # type: ignore
-        review.answers = json.dumps(answers_data)  # type: ignore
+                    answer["score"] = score_data.score
+        review.manager_evaluation_answers = json.dumps(answers_data)  # type: ignore
+
+    elif review.review_type == ReviewType.POTENTIAL and review.potential_evaluation_answers:  # type: ignore
+        answers_data = json.loads(review.potential_evaluation_answers)  # type: ignore
+        for score_data in scores:
+            for answer in answers_data:
+                if answer.get("question_id") == score_data.question_id:
+                    answer["score"] = score_data.score
+        review.potential_evaluation_answers = json.dumps(answers_data)  # type: ignore
+
+    # Проверяем, что answers_data была инициализирована
+    if answers_data is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No answers found for review type {review.review_type}"
+        )
 
     # Пересчитываем общий балл
-    updated_answers = [Answer(**data) for data in answers_data]  # type: ignore
+    updated_answers = [Answer(**data) for data in answers_data]
     total_score = review_service.calculate_weighted_score(updated_answers, review.review_type)  # type: ignore
     review.calculated_score = total_score  # type: ignore
 
@@ -476,18 +493,3 @@ async def score_manager_questions(
     return SuccessResponse(
         message=f"Questions scored successfully. New total score: {total_score:.2f}"
     )
-
-
-@router.get(
-    "/{review_id}/pending-manager-scores",
-    response_model=List[Dict],
-    summary="Получить вопросы, ожидающие оценку руководителя",
-)
-async def get_pending_manager_scores(
-    review_id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Получить список вопросов, которые нужно оценить руководителю"""
-    review_service = ReviewService(db)
-    return review_service.get_pending_manager_scoring_questions(review_id)
